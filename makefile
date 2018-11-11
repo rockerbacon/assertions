@@ -10,6 +10,8 @@ OBJS=$(patsubst $(SRC_DIR)/%.cpp, $(OBJS_DIR)/%.o, $(wildcard $(SRC_DIR)/*.cpp))
 UNITY_TESTS_DIR=./unity_tests
 UNITY_TESTS=$(patsubst $(UNITY_TESTS_DIR)/%.cpp, $(TEST_BUILD_DIR)/%, $(wildcard $(UNITY_TESTS_DIR)/*.cpp))
 
+HEADER_DEPS=$(SRC_DIR)/assert.h
+
 CXXFLAGS=-I$(SRC_DIR)
 
 clean:
@@ -18,6 +20,8 @@ clean:
 	rm -f $(TEST_BUILD_DIR)/*
 
 .SECONDARY: $(OBJS)
+
+$(HEADER_DEPS):
 
 $(OBJS_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CXX) -c $^ -o $(OBJS_DIR)/$*.o $(CXXFLAGS)

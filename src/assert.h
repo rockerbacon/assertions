@@ -3,95 +3,143 @@
 #include <exception>
 #include <sstream>
 #include <iostream>
+#include <functional>
+#include <vector>
+#include <memory>
 
 namespace assertion {
 
-	/*
-	 * Exception that's thrown whenever an assertion error occurs
-	 */
 	class assert_error : public std::exception {
 		private:
 			std::string message;
 		public:
-			assert_error (const std::string& message);
+			assert_error (const std::string& actual_value, const std::string& comparator_description, const std::string& reference_value);
+			assert_error (const std::string& comparator_description);
 
-			const char* what (void) const throw();
+			const char* what (void) const noexcept;
 	};
 
-	/*
-	 * Classes used as arguments for the operator argument in the assert function
-	 */
 	template<typename T>
-	class Comparator {
-		public:
-			virtual bool compare (const T& a, const T& b) const = 0;
-
-			virtual std::string toString (void) const = 0;
-	};
-	//Class used for negating the comparator passed in the constructor
-	template<typename T>
-	class Not : public Comparator<T> {
+	class comparator {
 		private:
-			const Comparator<T>& cmp;
+			std::function<bool(const T&, const T&)> comparison_function;
+			std::string description;
+			bool negate;
+			std::vector<decltype(comparison_function)> used_functions;
+
+			int use_function (const decltype(comparison_function)& comparison_function) {
+				int index = this->used_functions.size();
+				this->used_functions.push_back(comparison_function);
+				return index;
+			}
 		public:
-			inline Not (const Comparator<T>& cmp) : cmp(cmp) {}
+			comparator (const std::string& description, const std::function<bool(const T&, const T&)>& comparison_function) {
+				this->description = description;
+				this->comparison_function = comparison_function;
+				this->negate = false;
+			}
 
-			inline bool compare(const T& a, const T& b) const { return !this->cmp.compare(a, b); }
+			inline bool operator() (const T& actual_value, const T& reference_value) const {
+				return this->comparison_function(actual_value, reference_value) ^ negate;
+			}
 
-			inline std::string toString (void) const { return "not "+this->cmp.toString(); }
+			inline const std::string& get_description (void) const {
+				return this->description;
+			}
+
+			inline comparator& _not (void) {
+				this->description = "not " + this->description;
+				this->negate = !this->negate;
+				return *this;
+			}
+			inline comparator& _and (const comparator<T>& c) {
+				int this_function_index,
+					c_function_index;
+
+
+				this_function_index = this->use_function(this->comparison_function);
+				c_function_index = this->use_function(c.comparison_function);
+
+				this->comparison_function = [=](const T& actual_value, const T& reference_value) {
+					return used_functions[this_function_index](actual_value, reference_value) && used_functions[c_function_index](actual_value, reference_value);
+				};
+
+				this->description += " and " + c.get_description();
+
+				return *this;
+			}
+			inline comparator& _or (const comparator<T>& c) {
+				int this_function_index,
+					c_function_index;
+
+
+				this_function_index = this->use_function(this->comparison_function);
+				c_function_index = this->use_function(c.comparison_function);
+
+				this->comparison_function = [=](const T& actual_value, const T& reference_value) {
+					return used_functions[this_function_index](actual_value, reference_value) || used_functions[c_function_index](actual_value, reference_value);
+				};
+
+				this->description += " or " + c.get_description();
+
+				return *this;
+			}
+
+			comparator operator&& (const comparator<T>& c) const {
+				comparator<T> new_c = *this;
+				new_c._and(c);
+				return new_c;
+			}
+			comparator operator! (void) const {
+				comparator<T> new_c = *this;
+				new_c._not();
+				return new_c;
+			}
+			comparator operator|| (const comparator<T>& c) const {
+				comparator<T> new_c = *this;
+				new_c._or(c);
+				return new_c;
+			}
 	};
-	template<typename T>
-	class Equals : public Comparator<T> {
-		public:
-			inline bool compare (const T& a, const T& b) const { return a == b; }
 
-			inline std::string toString (void) const { return "=="; }
-	};
-	template<typename T>
-	class GreaterThan : public Comparator<T> {
-		public:
-			inline bool compare (const T& a, const T& b) const { return a > b; }
-
-			inline std::string toString (void) const { return ">"; }
-	};
-	template<typename T>
-	class LessThan : public Comparator<T> {
-		public:
-			inline bool compare (const T& a, const T& b) const { return a < b; }
-
-			inline std::string toString (void) const { return "<"; }
-	};
-	template<typename T>
-	class GreaterOrEquals : public Comparator<T> {
-		public:
-			inline bool compare (const T& a, const T& b) const { return a >= b; }
-
-			inline std::string toString (void) const { return ">="; }
-	};
-	template<typename T>
-	class LessOrEquals : public Comparator<T> {
-		public:
-			inline bool compare (const T& a, const T& b) const { return a <= b; }
-
-			inline std::string toString (void) const { return "<="; }
-	};
+	template<typename T> constexpr comparator<T> equals() {
+		return comparator<T>("equal", [](const T& actual_value, const T& reference_value) -> bool {
+			return actual_value == reference_value;
+		});
+	}
+	template<typename T> constexpr comparator<T> less_than() {
+		return comparator<T>("less than", [](const T& actual_value, const T& reference_value) -> bool {
+			return actual_value < reference_value;
+		});
+	}
+	template<typename T> constexpr comparator<T> greater_than() {
+		return comparator<T>("greater than", [](const T& actual_value, const T& reference_value) -> bool {
+			return actual_value > reference_value;
+		});
+	}
 
 	/*
 	 * Function for asserting test values
 	 *
 	 * @param actual_value: value to be tested
-	 * @param comparator: Comparator object used for testing actual_value against expected_value
+	 * @param comparator: comparator object used for testing actual_value against expected_value
 	 * @param expected_value: value used for testing actual_value
 	 *
 	 * @throw assert_error: Thrown when actual_value fails assertion
 	 *
 	 */
 	template<typename T>
-	inline void assert (const T& actual_value, const Comparator<T>& comparator, const T& expected_value) {
-		if (!comparator.compare(actual_value, expected_value)) {
-			std::ostringstream errMsg;
-			errMsg << "Assertion failed: expected a value " << comparator.toString() << " " << expected_value << " but got " << actual_value;
-			throw assert_error(errMsg.str().c_str());
+	inline void assert (const T& actual_value, const comparator<T>& c, const T& expected_value, bool verbose=true) {
+		if (!c(actual_value, expected_value)) {
+			if (verbose) {
+				std::ostringstream	actual_value_str,
+									expected_value_str;
+				actual_value_str << actual_value;
+				expected_value_str << expected_value;
+				throw assert_error(actual_value_str.str(), c.get_description(), expected_value_str.str());
+			} else {
+				throw assert_error(c.get_description());
+			}
 		}
 	}
 
