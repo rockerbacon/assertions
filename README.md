@@ -8,7 +8,8 @@ This documentation is still a work in progress
 [template<TypeActual, TypeExpected>void assert (const TypeActual& actual_value, const Comparator& comparator, const TypeExpected& expected_value) thow(assert_error)][function_assert];
 
 ## Classes
-[Comparator][class_comparator]
+[comparator][class_comparator]
+
 [assert_error][class_assert_error]
 
 [function_assert]: /documentation/function_assert.md
