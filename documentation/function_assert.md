@@ -2,8 +2,8 @@
 ## Definition
 Declared and defined in <src/assert.h>, line 60:
 ````
-template<typename TypeActual, typename TypeExpected>
-void assert (const TypeActual& actual_value, const Comparator& comparator, const TypeExpected& reference_value) throw(assert_error)
+template<typename T>
+void assert (const T& actual_value, const comparator& comparator, const T& reference_value) throw(assert_error)
 ````
 ## Parameters
 * _actual\_value_: the value to be tested;
@@ -16,8 +16,8 @@ void assert (const TypeActual& actual_value, const Comparator& comparator, const
 ## Usage example
 ````
 int a = 2;
-float b = 3.4;
+int b = 3;
 
-assertions::assert(a, assertions::less_than, b); //asserts successfully, since a is less than b, and code continues its execution
-assertions::assert(a, assertions::equals, b); //assert fails and exception is thrown, indicating to the test runner that the test has failed
+assertions::assert(a, assertions::less_than<int>(), b); //asserts successfully, since a is less than b, and code continues its execution
+assertions::assert(a, assertions::equals<int>(), b); //assert fails and exception is thrown, indicating to the test runner that the test has failed
 ````
