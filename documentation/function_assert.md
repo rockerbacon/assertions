@@ -1,6 +1,6 @@
 # Assert Function
 ## Definition
-Defined and implemented in </src/assert.h>, line 60:
+Declared and defined in <src/assert.h>, line 60:
 ````
 template<typename TypeActual, typename TypeExpected>
 void assert (const TypeActual& actual_value, const Comparator& comparator, const TypeExpected& reference_value) throw(assert_error)
