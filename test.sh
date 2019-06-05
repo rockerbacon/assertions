@@ -12,6 +12,8 @@ clear_line=`tput el 1`
 
 if [ $# -gt 0 ]; then
 
+	make tests
+
 	until [ -z "$1" ]
 	do
 

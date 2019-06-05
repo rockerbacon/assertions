@@ -1,32 +1,40 @@
 CXX=g++ --std=c++14
 
 SRC_DIR=./src
+HEADERS_DIR=$(SRC_DIR)
+TESTS_DIR=./unity_tests
+
+HEADER_DEPS=$(HEADERS_DIR)/assert.h
+
 BUILD_DIR=./build
 TEST_BUILD_DIR=./test_build
+OBJS_BUILD_DIR=./objs
 
-OBJS_DIR=./objs
-OBJS=$(patsubst $(SRC_DIR)/%.cpp, $(OBJS_DIR)/%.o, $(wildcard $(SRC_DIR)/*.cpp))
+OBJS=$(patsubst $(SRC_DIR)/%.cpp, $(OBJS_BUILD_DIR)/%.o, $(wildcard $(SRC_DIR)/*.cpp))
+TESTS=$(patsubst $(TESTS_DIR)/%.cpp, $(TEST_BUILD_DIR)/%, $(wildcard $(TESTS_DIR)/*.cpp))
 
-UNITY_TESTS_DIR=./unity_tests
-UNITY_TESTS=$(patsubst $(UNITY_TESTS_DIR)/%.cpp, $(TEST_BUILD_DIR)/%, $(wildcard $(UNITY_TESTS_DIR)/*.cpp))
+CXXFLAGS=-I$(HEADERS_DIR)
 
-HEADER_DEPS=$(SRC_DIR)/assert.h
-
-CXXFLAGS=-I$(SRC_DIR)
+nothing:
 
 clean:
 	rm -f $(BUILD_DIR)/*
-	rm -f $(OBJS_DIR)/*
+	rm -f $(OBJS_BUILD_DIR)/*
 	rm -f $(TEST_BUILD_DIR)/*
 
 .SECONDARY: $(OBJS)
 
 $(HEADER_DEPS):
 
-$(OBJS_DIR)/%.o: $(SRC_DIR)/%.cpp
-	$(CXX) -c $^ -o $(OBJS_DIR)/$*.o $(CXXFLAGS)
+$(OBJS_BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CXX) -c $^ -o $(OBJS_BUILD_DIR)/$*.o $(CXXFLAGS)
 
-$(TEST_BUILD_DIR)/%: $(UNITY_TESTS_DIR)/%.cpp $(OBJS)
+$(TEST_BUILD_DIR)/%: $(TESTS_DIR)/%.cpp $(OBJS)
 	$(CXX) $^ -o $(TEST_BUILD_DIR)/$* $(CXXFLAGS)
 
-unity_tests: $(UNITY_TESTS)
+tests: build_paths $(TESTS)
+
+build_paths:
+	mkdir -p $(BUILD_DIR)
+	mkdir -p $(TEST_BUILD_DIR)
+	mkdir -p $(OBJS_BUILD_DIR)

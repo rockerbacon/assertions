@@ -14,3 +14,7 @@ assert_error::assert_error (const string& comparator_description) {
 const char* assert_error::what (void) const noexcept {
 	return this->message.c_str();
 }
+
+void assertion::assert_fail(const std::string& message) {
+	throw assert_error(message);
+}

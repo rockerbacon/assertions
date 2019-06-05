@@ -4,7 +4,6 @@
 #include <sstream>
 #include <iostream>
 #include <functional>
-#include <vector>
 #include <memory>
 
 namespace assertion {
@@ -24,23 +23,20 @@ namespace assertion {
 		private:
 			std::function<bool(const T&, const T&)> comparison_function;
 			std::string description;
-			bool negate;
-			std::list<decltype(this->comparison_function)> function_chain;
 
-			int add_to_chain (const decltype(this->comparison_function)& comparison_function) {
+			inline int add_to_chain (const decltype(comparator::comparison_function)& comparison_function) {
 				int index = this->function_chain.size();
 				this->function_chain.push_back(comparison_function);
 				return index;
 			}
 		public:
-			comparator (const std::string& description, const std::function<bool(const T&, const T&)>& comparison_function) {
+			inline comparator (const std::string& description, const std::function<bool(const T&, const T&)>& comparison_function) {
 				this->description = description;
 				this->comparison_function = comparison_function;
-				this->negate = false;
 			}
 
 			inline bool operator() (const T& actual_value, const T& reference_value) const {
-				return this->comparison_function(actual_value, reference_value) ^ negate;
+				return this->comparison_function(actual_value, reference_value);
 			}
 
 			inline const std::string& get_description (void) const {
@@ -49,7 +45,9 @@ namespace assertion {
 
 			inline comparator& _not (void) {
 				this->description = "not " + this->description;
-				this->negate = !this->negate;
+				this->comparison_function = [=](const T& actual_value, const T& reference_value) -> bool {
+					return !this->comparison_function(actual_value, reference_value);
+				};
 				return *this;
 			}
 			inline comparator& _and (const comparator<T>& c) {
@@ -73,17 +71,17 @@ namespace assertion {
 				return *this;
 			}
 
-			comparator operator&& (const comparator<T>& c) const {
+			inline comparator operator&& (const comparator<T>& c) const {
 				comparator<T> new_c = *this;
 				new_c._and(c);
 				return new_c;
 			}
-			comparator operator! (void) const {
+			inline comparator operator! (void) const {
 				comparator<T> new_c = *this;
 				new_c._not();
 				return new_c;
 			}
-			comparator operator|| (const comparator<T>& c) const {
+			inline comparator operator|| (const comparator<T>& c) const {
 				comparator<T> new_c = *this;
 				new_c._or(c);
 				return new_c;
@@ -131,8 +129,6 @@ namespace assertion {
 		}
 	}
 
-	constexpr void assert_fail(const std::string& message) throw assert_error {
-		throw assert_error::assert_error(message);
-	}
+	void assert_fail(const std::string& message);
 
 };
