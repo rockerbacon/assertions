@@ -27,6 +27,12 @@ int main (void) {
 		cout << e.what() << endl;
 	}
 
+	try {
+		assert_fail("testing forced assertion failure");
+	} catch (assert_error &e) {
+		cout << e.what() << endl;
+	}
+
 	cout << "END" << endl;
 
 	return 0;
