@@ -12,8 +12,12 @@ clear_line=`tput el 1`
 
 if [ $# -gt 0 ]; then
 
+	echo "-------------------BUILD-------------------"
 	make tests
+	echo "-------------------BUILD-------------------"
 
+	echo 
+	echo "-------------------INDIVIDUAL TESTS-------------------"
 	until [ -z "$1" ]
 	do
 
@@ -34,9 +38,10 @@ if [ $# -gt 0 ]; then
 		shift
 
 	done
+	echo "-------------------INDIVIDUAL TESTS-------------------"
 
 	echo	#line feed
-	echo "Tests summary:"
+	echo "-------------------TESTS SUMMARY-------------------"
 	if [ $SUCCESSFUL_TESTS -gt 0 ]; then
 		echo "${green_color}$SUCCESSFUL_TESTS passed${reset_color}"
 	else
@@ -47,6 +52,7 @@ if [ $# -gt 0 ]; then
 	else
 		echo "$FAILED_TESTS failed${reset_color}"
 	fi
+	echo "-------------------TESTS SUMMARY-------------------"
 
 else
 	echo "Specify tests to be run. You can use regular expressions"
