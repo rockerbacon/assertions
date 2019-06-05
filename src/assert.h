@@ -53,15 +53,9 @@ namespace assertion {
 				return *this;
 			}
 			inline comparator& _and (const comparator<T>& c) {
-				int this_function_index,
-					c_function_index;
-
-
-				this_function_index = this->add_to_chain(this->comparison_function);
-				c_function_index = this->add_to_chain(c.comparison_function);
 
 				this->comparison_function = [=](const T& actual_value, const T& reference_value) {
-					return function_chain[this_function_index](actual_value, reference_value) && function_chain[c_function_index](actual_value, reference_value);
+					return this->comparison_function(actual_value, reference_value) && c.comparison_function(actual_value, reference_value);
 				};
 
 				this->description += " and " + c.get_description();
@@ -69,15 +63,9 @@ namespace assertion {
 				return *this;
 			}
 			inline comparator& _or (const comparator<T>& c) {
-				int this_function_index,
-					c_function_index;
-
-
-				this_function_index = this->add_to_chain(this->comparison_function);
-				c_function_index = this->add_to_chain(c.comparison_function);
 
 				this->comparison_function = [=](const T& actual_value, const T& reference_value) {
-					return function_chain[this_function_index](actual_value, reference_value) || function_chain[c_function_index](actual_value, reference_value);
+					return this->comparison_function(actual_value, reference_value) || c.comparison_function(actual_value, reference_value);
 				};
 
 				this->description += " or " + c.get_description();
