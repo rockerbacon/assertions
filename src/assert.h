@@ -143,4 +143,8 @@ namespace assertion {
 		}
 	}
 
+	constexpr void assert_fail(const std::string& message) throw assert_error {
+		throw assert_error::assert_error(message);
+	}
+
 };

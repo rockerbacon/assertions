@@ -7,6 +7,10 @@ This documentation is still a work in progress
 ## Functions
 [template<TypeActual, TypeExpected>void assert (const TypeActual& actual_value, const Comparator& comparator, const TypeExpected& expected_value) thow(assert_error)][function_assert];
 
+```
+void assert_fail(const std::string& message) throw assert_error
+```
+Forces an assert\_error to be thrown with the provided message
 ## Classes
 [comparator][class_comparator]
 
