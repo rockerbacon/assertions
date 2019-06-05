@@ -25,11 +25,11 @@ namespace assertion {
 			std::function<bool(const T&, const T&)> comparison_function;
 			std::string description;
 			bool negate;
-			std::vector<decltype(comparison_function)> used_functions;
+			std::list<decltype(this->comparison_function)> function_chain;
 
-			int use_function (const decltype(comparison_function)& comparison_function) {
-				int index = this->used_functions.size();
-				this->used_functions.push_back(comparison_function);
+			int add_to_chain (const decltype(this->comparison_function)& comparison_function) {
+				int index = this->function_chain.size();
+				this->function_chain.push_back(comparison_function);
 				return index;
 			}
 		public:
@@ -57,11 +57,11 @@ namespace assertion {
 					c_function_index;
 
 
-				this_function_index = this->use_function(this->comparison_function);
-				c_function_index = this->use_function(c.comparison_function);
+				this_function_index = this->add_to_chain(this->comparison_function);
+				c_function_index = this->add_to_chain(c.comparison_function);
 
 				this->comparison_function = [=](const T& actual_value, const T& reference_value) {
-					return used_functions[this_function_index](actual_value, reference_value) && used_functions[c_function_index](actual_value, reference_value);
+					return function_chain[this_function_index](actual_value, reference_value) && function_chain[c_function_index](actual_value, reference_value);
 				};
 
 				this->description += " and " + c.get_description();
@@ -73,11 +73,11 @@ namespace assertion {
 					c_function_index;
 
 
-				this_function_index = this->use_function(this->comparison_function);
-				c_function_index = this->use_function(c.comparison_function);
+				this_function_index = this->add_to_chain(this->comparison_function);
+				c_function_index = this->add_to_chain(c.comparison_function);
 
 				this->comparison_function = [=](const T& actual_value, const T& reference_value) {
-					return used_functions[this_function_index](actual_value, reference_value) || used_functions[c_function_index](actual_value, reference_value);
+					return function_chain[this_function_index](actual_value, reference_value) || function_chain[c_function_index](actual_value, reference_value);
 				};
 
 				this->description += " or " + c.get_description();
