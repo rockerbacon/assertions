@@ -57,4 +57,16 @@ int main (void) {
 		ASSERT_LESS_THAN_OR_EQUAL(4, 2);
 	} END_TEST_CASE;
 
+	TEST_CASE("multiple assertions in one test case - all successful") {
+		ASSERT_EQUAL(2, 2);
+		ASSERT_TRUE(true);
+		ASSERT_LESS_THAN(2, 4);
+	} END_TEST_CASE;
+
+	TEST_CASE("multiple assertions in one test case - one fails") {
+		ASSERT_EQUAL(2, 2);
+		ASSERT_TRUE(false);
+		ASSERT_LESS_THAN(2, 4);
+	} END_TEST_CASE;
+
 }
