@@ -1,52 +1,115 @@
 # Assertions
-A framework for writing automated tests in C++14.
-All classes and functions are contained inside the namespace _assertion_
+Assertions is a framework for writing automated tests in C++.
 
-This documentation is still a work in progress
-
-## Configuring build
-Inside the Makefile there are four variables which will need configuration:
-```
-SRC_DIR=relative path to the directory containing your source files
-HEADERS_DIR=relative path to the directory containing your header files
-TESTS_DIR=relative path to the directory containing your tests
-
-HEADER_DEPS=space separated list of headers which are considered dependancies
-```
-By default objects are build inside _./objs_, tests are build in _./test\_build_ and program binaries are build inside _./build_.
-
-These can be changed by editing the variables _OBJS\_BUILD\_DIR_, _TEST\_BUILD\_DIR_ and _BUILD\_DIR_ in the makefile, respectively.
+## Configuring the environment
+Assertions requires the project's directories and files to follow a specific format in order to work as intended. The _makefile_ and _test.sh_ script must be in the root directory for the project, in this root directory 5 aditional directories are also necessary. All these directories are defined inside the _makefile_:
+* SRC\_DIR: the directory where all the source (.cpp) files are stored. By default this is the _src_ folder;
+* HEADERS\_DIR: the directory where all the headers (.h or .hpp) for your project are stored. Defaults to the _SRC\_DIR_ folder;
+* TESTS\_DIR: the directory where all your tests must be written. Defaults to the _tests_ folder;
+* TEST\_BUILD\_DIR: the directory where all your tests builds will be compiled to. Defaults to _test\_build_ and is created automatically during the build;
+* OBJS\_BUILD\_DIR: the directory where all your object builds (.o files) will be compiled to. Defaults to _objs_ and is created automatically during the build;
 
 ## Running tests
-Then execute the script _test.sh_ with the tests to be run as parameters. The script will automatilly build the tests if needed, but when executing all tests it's adivised to manually build them first with "make tests" since without it the regular expression \* will not capture the unexistant test builds.
+To run already written tests the _test.sh_ script must be run from within the project's root directory. The usage follows this format:
+```
+./test.sh all | [space separated list of test names]
+```
+With the paramater _all_, all tests inside the _TESTS\_DIR_ folder will be build and run.
 
-The script must be run from the directory where the test script resides. Usage examples:
+A test name can be one of the following:
+* The name of a source file inside _TESTS\_DIR_. Eg: test_something.cpp;
+* The name of a source file inside _TESTS\_DIR_ without the _test\__ prefix and _.cpp_ extension. Eg: something;
+* The name of a test binary inside _TEST\_BUILD\_DIR_. Eg: test_something;
+Usage examples:
 ```
-$ ./test.sh test_build/*
+./test.sh all
 ```
-Runs all tests compiled in the _test\_build_ folder
+Run all tests
 ```
-$ ./test.sh test_build/assert_test
+./test.sh something
+./test.sh test_something
+./test.sh test_something.cpp
 ```
-Runs the test _assert\_test_ compiled in the _test\_build_ folder
+All three will run the test written in test\_something.cpp
+
+Alternatively the test binaries can also be run directly but the output will not have as much information as when run from the script.
+
+## Writing tests
+First step for writing a test is creating a _.cpp_ file inside _TESTS\_DIR_. The file must be prefixed with _test\__ but cannot be prefixed with _test\_test\__.
+
+The tests should be written inside a _main_ function. The main function does not need to return anything and does not take any arguments.
+
+### Test case block
+A test case block is a block specifing something to be tested. A test block must contain a message describing what is going to be tested. Eg:
 ```
-$ ./test.sh test_build/assert_test1 test_build/assert_test2
+test_case("whether this functionality works") {
+	// test code goes here
+} end_test_case;
 ```
-Runs both tests _assert\_test1_ and _assert\_test2_ compiled in the _test\_build_ folder
+
+### Asserting values
+Assertions ensure that a test condition is met and if not will cause the test case to fail. The first value is the value to be tested and the second value is the value expected. These are the provided assert macros:
+* _assert\_equal_: checks if two values are equal:
+```
+test_case("a equals 2") {
+	int a = 2;
+	assert_equal(a, 2);
+} end_test_case;
+```
+* _assert\_not\_equal_: checks if two values are different:
+```
+test_case("a not equal 2") {
+        int a = 3;
+        assert_not_equal(a, 2);
+} end_test_case;
+```
+* _assert\_greater\_than_: checks if a value is greater than another value:
+```
+test_case("a greater than 2") {
+        int a = 3;
+        assert_greater_than(a, 2);
+} end_test_case;
+```
+* _assert\_less\_than_: checks if a value is less than another value:
+```
+test_case("a less than 2") {
+        int a = 1;
+        assert_less_than(a, 2);
+} end_test_case;
+```
+* _assert\_greater\_than\_or\_equal_: checks if a value is greater than or equal another value:
+```
+test_case("a greater than or equal 1") {
+        int a = 2;
+        assert_greater_than_or_equal(a, 2);
+	assert_greater_than_or_equal(a, 1);
+} end_test_case;
+```
+* _assert\_less\_than\_or\_equal_: checks if a value is less than or equal another value:
+```
+test_case("a less than or equal 1") {
+        int a = 1;
+        assert_less_than_or_equal(a, 2);
+	assert_less_than_or_equal(a, 1);
+} end_test_case;
+```
+* _assert\_true_: checks if a logic expression is true. Useful for doing more complex assertions:
+```
+test_case("a in range [0, 3)") {
+        int a = 2;
+        assert_true(a >= 0 && a < 3);
+} end_test_case;
+```
+## Weird build errors
+Assertions makes heavy use of macros in order to generate code during compilation time. This means that if a test is badly written you will get compilation error messages referencing code you did not write explicitly. Eg:
+```
+int main (void) {
+	test_case("missing brackets")
+		assert_true(true);
+	end_test_case;
+}
+```
+The compiler will complain near a "try" keyword. Although you did not write this keyword anywhere, it is created during the expansion for the _test\_case_ macro
 
 
-## Functions
-[template<TypeActual, TypeExpected>void assert (const TypeActual& actual_value, const Comparator& comparator, const TypeExpected& expected_value) thow(assert_error)][function_assert];
 
-```
-void assert_fail(const std::string& message) throw assert_error
-```
-Forces an assert\_error to be thrown with the provided message
-## Classes
-[comparator][class_comparator]
-
-[assert_error][class_assert_error]
-
-[function_assert]: /documentation/function_assert.md
-[class_comparator]: /documentation/class_comparator.md
-[class_assert_error]: /documentation/class_assert_error.md

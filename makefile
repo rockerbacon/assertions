@@ -4,7 +4,6 @@ SRC_DIR=./src
 HEADERS_DIR=$(SRC_DIR)
 TESTS_DIR=./tests
 
-BUILD_DIR=./build
 TEST_BUILD_DIR=./test_build
 OBJS_BUILD_DIR=./objs
 
@@ -20,7 +19,6 @@ CXXFLAGS=-I$(HEADERS_DIR)
 nothing:
 
 clean:
-	rm -f $(BUILD_DIR)/*
 	rm -f $(OBJS_BUILD_DIR)/*
 	rm -f $(TEST_BUILD_DIR)/*
 
