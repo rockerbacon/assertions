@@ -2,13 +2,13 @@
 
 int main (void) {
 
-	TEST_CASE("test case block") {
+	test_case("test case block") {
 		int a = 2;
-	} END_TEST_CASE;
+	} end_test_case;
 
-	TEST_CASE("multiple test case blocks") {
+	test_case("multiple test case blocks") {
 		int b = 3;
-	} END_TEST_CASE;
+	} end_test_case;
 
 	return 0;
 
