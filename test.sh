@@ -66,7 +66,7 @@ if [ $# -gt 0 ]; then
 					TEST_FAILURES=$(echo $TEST_OUTPUT | grep -o "' failed:" | wc -l)
 					SUCCESSFUL_TESTS=`expr $SUCCESSFUL_TESTS + $TEST_SUCCESSES`
 					FAILED_TESTS=`expr $FAILED_TESTS + $TEST_FAILURES`
-					echo "	${TEST_OUTPUT}" | tr '\n' '\0' | sed 's/\0/\n\t/g' | sed 's/\n\t__successful_test_cases.*$//I'
+					echo "	${TEST_OUTPUT}" | tr '\n' '\032' | sed -e $(echo -e 's/\032/\\n\\t/g')
 				else
 					echo "	${red_color}build failed for ${TEST_SOURCE_FILE}${reset_color}"
 					FAILED_TESTS=`expr $FAILED_TESTS + 1`
