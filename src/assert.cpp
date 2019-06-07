@@ -1,20 +1,45 @@
 #include "assert.h"
+#include <iostream>
+#include <stdio.h>
+
+#define ERROR_TEXT_COLOR "\033[91m"
+#define SUCCESS_TEXT_COLOR "\033[92m"
+#define DEFAULT_TEXT_COLOR "\033[0m"
+
+const std::function<void(void)> assert::empty_function = [](void) -> void {};
+
+std::string assert::test_case_title;
+std::function<void(void)> assert::setup_test_case = assert::empty_function;
+std::function<void(void)> assert::teardown_test_case = assert::empty_function;
+std::stringstream assert::actual_value_str;
+std::stringstream assert::expected_value_str;
+
+assert::TerminalObserver concreteObserver;
+const assert::Observer& assert::observer = concreteObserver;
+
+bool assert::test_case_succeeded;
 
 using namespace std;
-using namespace assertion;
+using namespace assert;
 
-assert_error::assert_error (const string& actual_value, const string& comparator_description, const string& reference_value) {
-	this->message = "Assertion failed: expected value " + comparator_description + " " + reference_value + " but got " + actual_value;
+error::error (const stringstream& actual_value, const string& comparator_description, const stringstream& expected_value) {
+	ostringstream messageStream;
+	messageStream << "expected value " << comparator_description << " " << expected_value.rdbuf() << " but got " << actual_value.rdbuf();
+	this->message = messageStream.str();
 }
 
-assert_error::assert_error (const string& comparator_description) {
-	this->message = "Assertion failed on '" + comparator_description + "'";
+error::error (const string& reason) {
+	this->message = reason;
 }
 
-const char* assert_error::what (void) const noexcept {
+const char* error::what (void) const noexcept {
 	return this->message.c_str();
 }
 
-void assertion::assert_fail(const std::string& message) {
-	throw assert_error(message);
+void TerminalObserver::notify_test_case_failed (const exception& e, const string& test_case_title) const {
+	cout << ERROR_TEXT_COLOR << "Test case '" << test_case_title << "' failed: " << e.what() << DEFAULT_TEXT_COLOR << endl;
+}
+
+void TerminalObserver::notify_test_case_succeeded (const string& test_case_title) const {
+	cout << SUCCESS_TEXT_COLOR << "Test case '" << test_case_title << "' OK" << DEFAULT_TEXT_COLOR << endl;
 }

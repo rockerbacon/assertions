@@ -4,131 +4,133 @@
 #include <sstream>
 #include <iostream>
 #include <functional>
-#include <memory>
 
-namespace assertion {
+#define SUCCESS_STATUS_CODE 0
+#define ASSERTION_ERROR_STATUS_CODE 1
+#define TEST_IGNORED_STATUS_CODE 2
+#define UNEXPECTED_EXCEPTION_STATUS_CODE 3
 
-	class assert_error : public std::exception {
+#define EXCEPTION_FOR_NEXT_TEST_CASE
+
+#define BEFORE_NEXT_TEST_CASE(setup_function) assert::setup_test_case = setup_function
+#define AFTER_NEXT_TEST_CASE(teardown_function) assert::teardown_test_case = teardown_function
+
+#define IGNORE_REST_OF_TEST_CASE() throw assert::test_case_interruption()
+
+/*
+#define EXPECT_EXCEPTION_ON_NEXT_TEST(exception_type) #define EXCEPTION_FOR_NEXT_TEST_CASE\
+	} catch (const exception_type& e) {\
+		assert::expected_excetion_raised(e);
+*/
+
+#define TEST_CASE(str) assert::test_case_title = str;\
+	assert::test_case_succeeded = true;\
+	assert::setup_test_case();\
+	try
+
+#define CLEAR_TEST_CASE assert::teardown_test_case();\
+	BEFORE_NEXT_TEST_CASE(assert::empty_function);\
+	AFTER_NEXT_TEST_CASE(assert::empty_function)
+
+#define END_TEST_CASE catch (const assert::error &e) {\
+		assert::test_case_succeeded = false;\
+		assert::observer.notify_test_case_failed(e, assert::test_case_title);\
+		CLEAR_TEST_CASE;\
+	} catch (const assert::test_case_interruption& e) {\
+		CLEAR_TEST_CASE;\
+	/* }\
+	 EXCEPTION_FOR_NEXT_TEST_CASE\ */\
+	} catch (const std::exception &e) {\
+		assert::test_case_succeeded = false;\
+		assert::teardown_test_case();\
+		assert::observer.notify_test_case_failed(e, assert::test_case_title);\
+	}\
+	/*	#undef EXCEPTION_FOR_NEXT_TEST_CASE\
+		#define EXCEPTION_FOR_NEXT_TEST_CASE\ */\
+	if (assert::test_case_succeeded) {\
+		assert::observer.notify_test_case_succeeded(assert::test_case_title);\
+	}\
+	CLEAR_TEST_CASE;
+
+#define ASSERT_TRUE(condition) if (!condition) {\
+		throw assert::error("condition was false");\
+	}
+
+#define ASSERT_EQUAL(actual_value, expected_value) assert::actual_value_str << actual_value;\
+	assert::expected_value_str << expected_value;\
+	if (actual_value != expected_value) {\
+		throw assert::error(assert::actual_value_str, "equal", assert::expected_value_str);\
+	}\
+	std::stringstream().swap(assert::actual_value_str);\
+	std::stringstream().swap(assert::expected_value_str)
+#define ASSERT_GREATER_THAN(actual_value, expected_value) assert::actual_value_str << actual_value;\
+	assert::expected_value_str << expected_value;\
+	if (actual_value <= expected_value) {\
+		throw assert::error(assert::actual_value_str, "greater than", assert::expected_value_str);\
+	}\
+	std::stringstream().swap(assert::actual_value_str);\
+	std::stringstream().swap(assert::expected_value_str)
+#define ASSERT_LESS_THAN(actual_value, expected_value) assert::actual_value_str << actual_value;\
+	assert::expected_value_str << expected_value;\
+	if (actual_value >= expected_value) {\
+		throw assert::error(assert::actual_value_str, "less than", assert::expected_value_str);\
+	}\
+	std::stringstream().swap(assert::actual_value_str);\
+	std::stringstream().swap(assert::expected_value_str)
+#define ASSERT_GREATER_THAN_OR_EQUAL(actual_value, expected_value) assert::actual_value_str << actual_value;\
+	assert::expected_value_str << expected_value;\
+	if (actual_value < expected_value) {\
+		throw assert::error(assert::actual_value_str, "greater than or equal", assert::expected_value_str);\
+	}\
+	std::stringstream().swap(assert::actual_value_str);\
+	std::stringstream().swap(assert::expected_value_str)
+#define ASSERT_LESS_THAN_OR_EQUAL(actual_value, expected_value) assert::actual_value_str << actual_value;\
+	assert::expected_value_str << expected_value;\
+	if (actual_value > expected_value) {\
+		throw assert::error(assert::actual_value_str, "less than or equal", assert::expected_value_str);\
+	}\
+	std::stringstream().swap(assert::actual_value_str);\
+	std::stringstream().swap(assert::expected_value_str)
+#define FAIL_TEST(reason) throw assert::error(reason)
+
+
+
+namespace assert {
+
+	extern const std::function<void(void)> empty_function;
+
+	extern std::string test_case_title;
+	extern std::function<void(void)> setup_test_case;
+	extern std::function<void(void)> teardown_test_case;
+	extern std::stringstream actual_value_str;
+	extern std::stringstream expected_value_str;
+	extern bool test_case_succeeded;
+
+
+	class error : public std::exception {
 		private:
 			std::string message;
 		public:
-			assert_error (const std::string& actual_value, const std::string& comparator_description, const std::string& reference_value);
-			assert_error (const std::string& comparator_description);
+			error (const std::stringstream& actual_value, const std::string& comparator_description, const std::stringstream& expected_value);
+			error (const std::string& reason);
 
-			const char* what (void) const noexcept;
+			virtual const char* what (void) const noexcept;
 	};
 
-	template<typename T>
-	class comparator {
-		private:
-			std::function<bool(const T&, const T&)> comparison_function;
-			std::string description;
+	class test_case_interruption : public std::exception {};
 
-			inline int add_to_chain (const decltype(comparator::comparison_function)& comparison_function) {
-				int index = this->function_chain.size();
-				this->function_chain.push_back(comparison_function);
-				return index;
-			}
+	class Observer {
 		public:
-			inline comparator (const std::string& description, const std::function<bool(const T&, const T&)>& comparison_function) {
-				this->description = description;
-				this->comparison_function = comparison_function;
-			}
-
-			inline bool operator() (const T& actual_value, const T& reference_value) const {
-				return this->comparison_function(actual_value, reference_value);
-			}
-
-			inline const std::string& get_description (void) const {
-				return this->description;
-			}
-
-			inline comparator& _not (void) {
-				this->description = "not " + this->description;
-				this->comparison_function = [=](const T& actual_value, const T& reference_value) -> bool {
-					return !this->comparison_function(actual_value, reference_value);
-				};
-				return *this;
-			}
-			inline comparator& _and (const comparator<T>& c) {
-
-				this->comparison_function = [=](const T& actual_value, const T& reference_value) {
-					return this->comparison_function(actual_value, reference_value) && c.comparison_function(actual_value, reference_value);
-				};
-
-				this->description += " and " + c.get_description();
-
-				return *this;
-			}
-			inline comparator& _or (const comparator<T>& c) {
-
-				this->comparison_function = [=](const T& actual_value, const T& reference_value) {
-					return this->comparison_function(actual_value, reference_value) || c.comparison_function(actual_value, reference_value);
-				};
-
-				this->description += " or " + c.get_description();
-
-				return *this;
-			}
-
-			inline comparator operator&& (const comparator<T>& c) const {
-				comparator<T> new_c = *this;
-				new_c._and(c);
-				return new_c;
-			}
-			inline comparator operator! (void) const {
-				comparator<T> new_c = *this;
-				new_c._not();
-				return new_c;
-			}
-			inline comparator operator|| (const comparator<T>& c) const {
-				comparator<T> new_c = *this;
-				new_c._or(c);
-				return new_c;
-			}
+			virtual void notify_test_case_failed(const std::exception& e, const std::string& test_case_title) const = 0;
+			virtual void notify_test_case_succeeded (const std::string& test_case_title) const = 0;
 	};
 
-	template<typename T> constexpr comparator<T> equals() {
-		return comparator<T>("equal", [](const T& actual_value, const T& reference_value) -> bool {
-			return actual_value == reference_value;
-		});
-	}
-	template<typename T> constexpr comparator<T> less_than() {
-		return comparator<T>("less than", [](const T& actual_value, const T& reference_value) -> bool {
-			return actual_value < reference_value;
-		});
-	}
-	template<typename T> constexpr comparator<T> greater_than() {
-		return comparator<T>("greater than", [](const T& actual_value, const T& reference_value) -> bool {
-			return actual_value > reference_value;
-		});
-	}
+	class TerminalObserver : public Observer {
+		public:
+			virtual void notify_test_case_failed(const std::exception& e, const std::string& test_case_title) const;
+			virtual void notify_test_case_succeeded (const std::string& test_case_title) const;
+	};
 
-	/*
-	 * Function for asserting test values
-	 *
-	 * @param actual_value: value to be tested
-	 * @param comparator: comparator object used for testing actual_value against expected_value
-	 * @param expected_value: value used for testing actual_value
-	 *
-	 * @throw assert_error: Thrown when actual_value fails assertion
-	 *
-	 */
-	template<typename T>
-	inline void assert (const T& actual_value, const comparator<T>& c, const T& expected_value, bool verbose=true) {
-		if (!c(actual_value, expected_value)) {
-			if (verbose) {
-				std::ostringstream	actual_value_str,
-									expected_value_str;
-				actual_value_str << actual_value;
-				expected_value_str << expected_value;
-				throw assert_error(actual_value_str.str(), c.get_description(), expected_value_str.str());
-			} else {
-				throw assert_error(c.get_description());
-			}
-		}
-	}
-
-	void assert_fail(const std::string& message);
+	extern const Observer& observer;
 
 };
