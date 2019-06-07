@@ -63,7 +63,7 @@ if [ $# -gt 0 ]; then
 				if [ $BUILD_STATUS -eq 0 ]; then
 					TEST_OUTPUT=$($TEST_BINARY_FILE)
 					TEST_SUCCESSES=$(echo $TEST_OUTPUT | grep -o "' OK" | wc -l)
-					TEST_FAILURES=$(echo $TEST_OUTPUT | grep -o 'failed: ' | wc -l)
+					TEST_FAILURES=$(echo $TEST_OUTPUT | grep -o "' failed:" | wc -l)
 					SUCCESSFUL_TESTS=`expr $SUCCESSFUL_TESTS + $TEST_SUCCESSES`
 					FAILED_TESTS=`expr $FAILED_TESTS + $TEST_FAILURES`
 					echo "	${TEST_OUTPUT}" | tr '\n' '\0' | sed 's/\0/\n\t/g' | sed 's/\n\t__successful_test_cases.*$//I'
