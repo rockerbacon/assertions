@@ -14,19 +14,32 @@ TESTS_DIR=$(cat makefile | grep -e 'TESTS_DIR\s*=' | sed 's/TESTS_DIR[][:space:]
 TEST_BUILD_DIR=$(cat makefile | grep -e 'TEST_BUILD_DIR\s*=' | sed 's/TEST_BUILD_DIR[[:space:]]*=[[:space:]]*//')
 
 determine_current_test_full_name () {
-	TEST_NAME=$(echo $CURRENT_TEST | sed "s/^test_//; s/.cpp$//")
-	TEST_NAME="test_${TEST_NAME}"
+	ESCAPED_TESTS_DIR=$(echo $TESTS_DIR | sed 's/\//\\\//g; s/\./\\\./g')
+	ESCAPED_TEST_BUILD_DIR=$(echo $TEST_BUILD_DIR | sed 's/\//\\\//g; s/\./\\\./g')
+	TEST_NAME=$(echo $CURRENT_TEST | sed "s/^${ESCAPED_TESTS_DIR}\///; s/^${ESCAPED_TEST_BUILD_DIR}\///;" | sed "s/^test_//; s/.cpp$//")
+	TEST_FULL_NAME="test_${TEST_NAME}"
 }
 
 determine_current_test_source_file () {
-	TEST_SOURCE_FILE="${TESTS_DIR}/${TEST_NAME}.cpp"
+	TEST_SOURCE_FILE="${TESTS_DIR}/${TEST_FULL_NAME}.cpp"
 }
 
 determine_current_test_binary_file () {
-	TEST_BINARY_FILE="${TEST_BUILD_DIR}/${TEST_NAME}"
+	TEST_BINARY_FILE="${TEST_BUILD_DIR}/${TEST_FULL_NAME}"
 }
 
 if [ $# -gt 0 ]; then
+	if [ "$1" != "all" ]; then
+		TESTS=$1
+		shift
+		until [ -z "$1" ]
+		do
+			TESTS="${TESTS}\n${1}"
+			shift
+		done
+	else
+		TESTS="${TESTS_DIR}/*.cpp"
+	fi
 
 	FAILED_TESTS=0
 	SUCCESSFUL_TESTS=0
@@ -34,23 +47,21 @@ if [ $# -gt 0 ]; then
 
 	echo	# line feed
 	echo "-------------------INDIVIDUAL TESTS-------------------"
-	until [ -z "$1" ]
+	for CURRENT_TEST in $TESTS
 	do
 
-		CURRENT_TEST=$1
-
-		echo "Testing ${CURRENT_TEST}..."
-		if [ -f "${TESTS_DIR}/${CURRENT_TEST}" ]; then
-			echo "Executing tests from specific folder not yet supported, use regular expressions instead"
+		determine_current_test_full_name
+		echo "Testing ${TEST_NAME}..."
+		if [ -d "${TESTS_DIR}/${CURRENT_TEST}" ]; then
+			echo "Executing tests from specific folder not yet supported"
 		else
-			determine_current_test_full_name
 			determine_current_test_source_file
 			determine_current_test_binary_file
 			if [ -f "$TEST_SOURCE_FILE" ]; then
 				make -s $TEST_BINARY_FILE
 				BUILD_STATUS=$?
 				if [ $BUILD_STATUS -eq 0 ]; then
-					TEST_OUTPUT=$("${TEST_BUILD_DIR}/$TEST_NAME")
+					TEST_OUTPUT=$($TEST_BINARY_FILE)
 					TEST_SUCCESSES=$(echo $TEST_OUTPUT | grep -o "' OK" | wc -l)
 					TEST_FAILURES=$(echo $TEST_OUTPUT | grep -o 'failed: ' | wc -l)
 					SUCCESSFUL_TESTS=`expr $SUCCESSFUL_TESTS + $TEST_SUCCESSES`
@@ -67,8 +78,6 @@ if [ $# -gt 0 ]; then
 		fi
 
 		echo	# line feed
-
-		shift
 
 	done
 	echo "-------------------INDIVIDUAL TESTS-------------------"

@@ -6,11 +6,7 @@
 #define SUCCESS_TEXT_COLOR "\033[92m"
 #define DEFAULT_TEXT_COLOR "\033[0m"
 
-const std::function<void(void)> assert::empty_function = [](void) -> void {};
-
 std::string assert::test_case_title;
-std::function<void(void)> assert::setup_test_case = assert::empty_function;
-std::function<void(void)> assert::teardown_test_case = assert::empty_function;
 std::stringstream assert::actual_value_str;
 std::stringstream assert::expected_value_str;
 
@@ -22,17 +18,19 @@ bool assert::test_case_succeeded;
 using namespace std;
 using namespace assert;
 
-error::error (const stringstream& actual_value, const string& comparator_description, const stringstream& expected_value) {
+assertion_failed::assertion_failed (stringstream& actual_value, const string& comparator_description, stringstream& expected_value) {
 	ostringstream messageStream;
 	messageStream << "expected value " << comparator_description << " " << expected_value.rdbuf() << " but got " << actual_value.rdbuf();
 	this->message = messageStream.str();
+	stringstream().swap(actual_value);
+	stringstream().swap(expected_value);
 }
 
-error::error (const string& reason) {
+assertion_failed::assertion_failed (const string& reason) {
 	this->message = reason;
 }
 
-const char* error::what (void) const noexcept {
+const char* assertion_failed::what (void) const noexcept {
 	return this->message.c_str();
 }
 
