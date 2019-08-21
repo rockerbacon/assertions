@@ -10,8 +10,8 @@ reset_color=`tput setaf $default_text_color`
 up_line=`tput cuu 1`
 clear_line=`tput el 1`
 
-TESTS_DIR=$(cat makefile | grep -e 'TESTS_DIR\s*=' | sed 's/TESTS_DIR[][:space:]]*=[][:space:]]*//')
-TEST_BUILD_DIR=$(cat makefile | grep -e 'TEST_BUILD_DIR\s*=' | sed 's/TEST_BUILD_DIR[[:space:]]*=[[:space:]]*//')
+TESTS_DIR=tests
+TEST_BUILD_DIR=tests_build
 
 determine_current_test_full_name () {
 	ESCAPED_TESTS_DIR=$(echo $TESTS_DIR | sed 's/\//\\\//g; s/\./\\\./g')
