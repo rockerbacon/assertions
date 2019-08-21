@@ -12,11 +12,11 @@ Assertions is build with a predefined file tree. Some folders of this tree can b
 - _tests_: folder containing all tests source files. Cannot be changed without also changing _test.sh_ 
 
 ## Running tests
-To run already written tests, the _test.sh_ script should be run. The usage of the script is the following: 
+To run already written tests, the _test.sh_ script should be run. Tests are automatically built if needed. The usage of the script is the following: 
 ```
 ./test.sh [all] | [space separated list of test names]
 ```
-With the paramater _all_, all tests inside the _tests_ folder will be built and run.
+With the paramater _all_, all tests inside _tests_ are executed.
 
 A test name can be one of the following:
 * The name of a source file inside _tests_. Eg: test_something.cpp;
