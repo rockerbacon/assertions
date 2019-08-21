@@ -22,6 +22,7 @@ A test name can be one of the following:
 * The name of a source file inside _tests_. Eg: test_something.cpp;
 * The name of a source file inside _tests_ without the _test\__ prefix and _.cpp_ extension. Eg: something;
 * The name of a test binary inside _build_. Eg: test_something;
+
 Usage examples:
 ```
 ./test.sh
