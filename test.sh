@@ -65,9 +65,7 @@ do
 		determine_current_test_binary_file
 		if [ -f "$TEST_SOURCE_FILE" ]; then
 
-			cd "$TEST_BUILD_DIR"
-			make -s $TEST_FULL_NAME
-			cd ..
+			$SCRIPT_PATH/build.sh $TEST_FULL_NAME
 
 			BUILD_STATUS=$?
 			if [ $BUILD_STATUS -eq 0 ]; then
