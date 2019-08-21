@@ -1,10 +1,4 @@
-*.o
-objs/*
+/build
 /release
-/tests_build
 *~
 *.swp
-CMakeCache.txt
-CMakeFiles
-cmake_install.cmake
-Makefile
