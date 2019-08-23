@@ -35,28 +35,28 @@ namespace benchmark {
 	};
 
 	class Observer {
+		protected:
+			std::list<ObservableVariable*> variables_to_observe;
 		public:
-			virtual ~Observer (void) = default;
+			virtual ~Observer (void);
 			virtual void notifyBenchmarkBegun (const std::string& benchmarkTitle, unsigned numberOfRuns) = 0;
 			virtual void notifyRunBegun (void) = 0;
 			virtual void notifyRunEnded (void) = 0;
 			virtual void notifyBenchmarkEnded (void) = 0;
+
+			template<typename T>
+			void observeVariable(const std::string &variable_label, const T &variable) {
+				ObservableVariableTemplate<T> *observableVariable = new ObservableVariableTemplate<T>(variable_label, variable);
+				this->variables_to_observe.push_back(observableVariable);
+			}
 	};
 
 	class TerminalObserver : public Observer {
 		private:
 			Stopwatch stopwatch;
-			std::list<ObservableVariable*> variablesToObserve;
 			unsigned numberOfRuns;
 		public:
 			TerminalObserver (void) = default;
-			~TerminalObserver (void);
-
-			template<typename T>
-			void observeVariable (const std::string& variableLabel, const T& variable) {
-				ObservableVariableTemplate<T> *observableVariable = new ObservableVariableTemplate<T>(variableLabel, variable);
-				this->variablesToObserve.push_back(observableVariable);
-			}
 
 			void notifyBenchmarkBegun (const std::string& benchmarkTitle, unsigned numberOfRuns);
 			void notifyRunBegun (void);
@@ -67,17 +67,9 @@ namespace benchmark {
 	class TextFileObserver : public Observer {
 		private:
 			std::ofstream outputFile;
-			std::list<ObservableVariable*> variablesToObserve;
 			unsigned numberOfRuns;
 		public:
 			TextFileObserver (const std::string& outputFilePath);
-			~TextFileObserver (void);
-
-			template<typename T>
-			void observeVariable (const std::string& variableLabel, const T& variable) {
-				ObservableVariableTemplate<T> *observableVariable = new ObservableVariableTemplate<T>(variableLabel, variable);
-				this->variablesToObserve.push_back(observableVariable);
-			}
 
 			void notifyBenchmarkBegun (const std::string &benchmarkTitle, unsigned numberOfRuns);
 			void notifyRunBegun (void);

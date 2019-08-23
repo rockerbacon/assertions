@@ -11,13 +11,13 @@
 using namespace benchmark;
 using namespace std;
 
-/*TERMINAL OBSERVER*/
-TerminalObserver::~TerminalObserver (void) {
-	for (auto observableVariable : this->variablesToObserve) {
+Observer::~Observer (void) {
+	for (auto observableVariable : this->variables_to_observe) {
 		delete observableVariable;
 	}
 }
 
+/*TERMINAL OBSERVER*/
 void TerminalObserver::notifyBenchmarkBegun (const string& benchmarkTitle, unsigned numberOfRuns) {
 	this->stopwatch.reset();
 	this->numberOfRuns = 0;
@@ -35,7 +35,7 @@ void TerminalObserver::notifyRunEnded (void) {
 	cout << "\tRun: " << this->numberOfRuns << endl;
 	cout << CLEAR_LINE;
 	cout << "\tExecution time: " << this->stopwatch.formatedTotalTime() << endl;
-	for (auto observableVariable : this->variablesToObserve) {
+	for (auto observableVariable : this->variables_to_observe) {
 		cout << CLEAR_LINE;
 		cout << "\t" << observableVariable->getLabel() << ": " << observableVariable->getValue() << endl;
 	}
@@ -53,13 +53,6 @@ TextFileObserver::TextFileObserver (const string& outputFilePath) {
 	this->numberOfRuns = 0;
 }
 
-TextFileObserver::~TextFileObserver (void) {
-	this->outputFile.close();
-	for (auto observableVariable : this->variablesToObserve) {
-		delete observableVariable;
-	}
-}
-
 void TextFileObserver::notifyBenchmarkBegun (const string& benchmarkTitle, unsigned numberOfRuns) {
 	this->numberOfRuns = 0;
 	time_t currentTime = chrono::system_clock::to_time_t(chrono::system_clock::now());
@@ -75,7 +68,7 @@ void TextFileObserver::notifyRunBegun (void) {
 }
 
 void TextFileObserver::notifyRunEnded (void) {
-	for (auto observableVariable : this->variablesToObserve) {
+	for (auto observableVariable : this->variables_to_observe) {
 		this->outputFile << '\t' << observableVariable->getLabel() << ": " << observableVariable->getValue() << endl;
 	}
 	this->outputFile << endl;
