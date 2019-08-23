@@ -1,4 +1,4 @@
-#include "assertion/assert.h"
+#include "assertions/assert.h"
 
 int main (void) {
 	test_case("assert true succesfully") {
