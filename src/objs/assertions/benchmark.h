@@ -12,7 +12,7 @@
 			o->notifyRunBegun();\
 		}
 
-#define end_multiple_runs \
+#define end_benchmark \
 		for (auto o: benchmark::observers) {\
 			o->notifyRunEnded();\
 		}\
@@ -29,7 +29,7 @@ namespace benchmark {
 	void delete_observers(void);
 
 	template<typename T>
-	void observeVariable(const std::string &variable_label, const T& variable) {
+	void observe_variable(const std::string &variable_label, const T& variable) {
 		for (auto o : observers) {
 			o->observeVariable(variable_label, variable);
 		}

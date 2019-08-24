@@ -1,5 +1,20 @@
 # Assertions
-Assertions is a framework for writing automated tests in C++.
+Assertions is a framework for simplifying the development proccess of C++ applications.
+
+Currently, Assertions has functionality to help write tests and benchmarks and to generate builds for the project. 
+
+#### Table of Contents
+* [The project file tree](#the project file tree)
+* [Running tests](#running tests)
+* [Building the Project](#building the project)
+* [Writing Tests](#writing tests)
+	* [Test case block](#test case block)
+	* [Asserting values](#asserting values)
+	* [Weird build errors](#weird build errors)
+* [Writing benchmarks](#writing benchmarks)
+	* [Registering observers](#registering observers)
+	* [Observing variables](#observing variables)
+	* [Benchmark block](#benchmark block)
 
 ## The project file tree
 Assertions is build with a predefined file tree. Some folders of this tree can be changed by editing _CMakeLists.txt_, _build.sh_ and _test.sh_. The project tree is as follows:
@@ -47,12 +62,12 @@ Assertions provides the script _build.sh_ for building code. Usage:
 ```
 * _target_: Makefile target that should be built. With the default CMakeLists this will be the name of binary to be generated in _build_
 * _clean_: Delete all build files
-* _cmake_only_: Execute cmake but do not build the binaries
+* _cmake-only_: Execute cmake but do not build the binaries
 
 If no option is passed then all possible targets are built
 
-## Writing tests
-First step for writing a test is creating a _.cpp_ file inside _tests_. The file must be prefixed with _test\__ but cannot be prefixed with _test\_test\__.
+## Writing test
+First step for writing a test is creating a _.cpp_ file with the "test\_" prefix inside _tests_.
 
 The tests should be written inside a _main_ function. The main function does not need to return anything and does not take any arguments.
 
@@ -65,36 +80,46 @@ test_case("whether this functionality works") {
 ```
 
 ### Asserting values
-Assertions ensure that a test condition is met and if not will cause the test case to fail. The first value is the value to be tested and the second value is the value expected. These are the provided assert macros:
-* _assert\_equal_: checks if two values are equal:
+Assert macros ensure that a test condition is met and if not will cause the test case to fail. The first value is the value to be tested and the second value is the target value.
+ 
+#### assert\_equal
+Checks if a value equals the target 
 ```
 test_case("a equals 2") {
 	int a = 2;
 	assert_equal(a, 2);
 } end_test_case;
 ```
-* _assert\_not\_equal_: checks if two values are different:
+
+#### assert\_not\_equal
+Checks if a value is different from the target
 ```
 test_case("a not equal 2") {
         int a = 3;
         assert_not_equal(a, 2);
 } end_test_case;
 ```
-* _assert\_greater\_than_: checks if a value is greater than another value:
+
+#### assert\_greater\_than
+Checks if a value is greater than the target
 ```
 test_case("a greater than 2") {
         int a = 3;
         assert_greater_than(a, 2);
 } end_test_case;
 ```
-* _assert\_less\_than_: checks if a value is less than another value:
+
+#### assert\_less\_than
+Checks if a value is less than the target 
 ```
 test_case("a less than 2") {
         int a = 1;
         assert_less_than(a, 2);
 } end_test_case;
 ```
-* _assert\_greater\_than\_or\_equal_: checks if a value is greater than or equal another value:
+
+#### assert\_greater\_than\_or\_equal
+Checks if a value is greater than or equal the target
 ```
 test_case("a greater than or equal 1") {
         int a = 2;
@@ -102,7 +127,9 @@ test_case("a greater than or equal 1") {
 	assert_greater_than_or_equal(a, 1);
 } end_test_case;
 ```
-* _assert\_less\_than\_or\_equal_: checks if a value is less than or equal another value:
+
+#### assert\_less\_than\_or\_equal
+Checks if a value is less than or equal the target
 ```
 test_case("a less than or equal 1") {
         int a = 1;
@@ -110,14 +137,17 @@ test_case("a less than or equal 1") {
 	assert_less_than_or_equal(a, 1);
 } end_test_case;
 ```
-* _assert\_true_: checks if a logic expression is true. Useful for doing more complex assertions:
+
+#### assert\_true
+Checks if a logic expression is true. Useful for doing more complex assertions
 ```
 test_case("a in range [0, 3)") {
         int a = 2;
         assert_true(a >= 0 && a < 3);
 } end_test_case;
 ```
-## Weird build errors
+
+### Weird build errors
 Assertions makes heavy use of macros in order to generate code during compilation time. This means that if a test is badly written you will get compilation error messages referencing code you did not write explicitly. Eg:
 ```
 int main (void) {
@@ -128,5 +158,40 @@ int main (void) {
 ```
 The compiler will complain near a "try" keyword. Although you did not write this keyword anywhere, it is created during the expansion for the _test\_case_ macro
 
+## Writing benchmarks
+Benchmakrs are used for analyzing performance aspects of the code beyond just execution time. A piece of code can be run multiple times with variable being fed to an observer during the code execution.
 
+A complete example of the usage of the benchmark functionality is available in [benchmark_counter.cpp](src/main/benchmark_counter.cpp)
 
+### Registering observers
+Observers are entities which observe the values stored in variables and outputs those values somewhere so that they can be read by a human or by another program. Currently assertions offers these observers:
+* TerminalObserver: displays latest variable values to stdout. Requires no parameters
+* TextFileObserver: outputs values of each run in human readable format for later analysis. Requires a string containing the path for the output file
+
+Observers are registered with the function register\_observer:
+```
+benchmark::register_observer(new TerminalObserver());
+benchmark::register_observer(new TextFileObserver("benchmark_results.txt"));
+```
+
+register\_observer requires a pointer due to C++ abstract class constraints. If the observers are instantiated directly inside the function call, the function delete\_observers can be used to automatically delete all previously registered observers:
+```
+benchmark::delete_observers();
+```
+
+### Observing variables
+By default, observers will always output total execution time and run number. Other variables can be added by using the function observe\_variable(variable\_label, variable):
+```
+int x;
+benchmark::observe_variable("value of the x variable", x);
+```
+
+### Benchmark block
+After observers have been registered and (optionally) variables have been set to be observed, a benchmark block is used to execute a piece of code _n_ times:
+```
+benchmark("execute this code 100 times", 100) {
+	x = some_performance_critical_function();
+	y = some_other_performance_critical_function();
+} end_benchmark;
+```
+This piece of code will execute two performance critical functions 100 times. All registered observers are notified of updates after every loop.

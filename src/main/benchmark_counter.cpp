@@ -9,11 +9,11 @@ int main (void) {
 
 	benchmark::register_observer(new benchmark::TerminalObserver());
 
-	benchmark::observeVariable("x", x);
-	benchmark::observeVariable("y", y);
-	benchmark::observeVariable("x^2", xsquared);
-	benchmark::observeVariable("y^2", ysquared);
-	benchmark::observeVariable("x*y", xy);
+	benchmark::observe_variable("x", x);
+	benchmark::observe_variable("y", y);
+	benchmark::observe_variable("x^2", xsquared);
+	benchmark::observe_variable("y^2", ysquared);
+	benchmark::observe_variable("x*y", xy);
 
 	benchmark("counters", runs) {
 		std::this_thread::sleep_for(std::chrono::seconds(2));
@@ -23,7 +23,7 @@ int main (void) {
 		xsquared = x*x;
 		ysquared = y*y;
 		xy = x*y;
-	} end_multiple_runs;
+	} end_benchmark;
 
 	benchmark::delete_observers();
 
