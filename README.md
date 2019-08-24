@@ -14,6 +14,7 @@ Currently, Assertions has functionality to help write tests and benchmarks and t
 * [Writing benchmarks](#writing-benchmarks)
 	* [Registering observers](#registering-observers)
 	* [Observing variables](#observing-variables)
+		* [Observation modes](#observation-modes)
 	* [Benchmark block](#benchmark-block)
 
 ## The project file tree
@@ -180,11 +181,25 @@ benchmark::delete_observers();
 ```
 
 ### Observing variables
-By default, observers will always output total execution time and run number. Other variables can be added by using the function _observe\_variable(variable\_label, variable)_:
+By default, observers will always output total execution time and run number. Other variables can be added by using the function _observe\_variable(variable\_label, variable, observation\_mode)_:
 ```
 int x;
+int y;
+int z;
 benchmark::observe_variable("value of the x variable", x);
+benchmark::observe_variable("y", y, benchmark::observation_mode::AVERAGE_VALUE);
+benchmark::observe_variable("z", z, benchmark::observation_mode::CURRENT_VALUE | benchmark::observation_mode::AVERAGE_VALUE);
 ```
+
+Note that variable observation was made with primitives in mind and classes will need to implement various operators in order to be compatible with this feature - see all classes implementing the ObservableVariable interface in [observer.h](src/objs/assertions/observer.h) for a full view of the necessary operators.
+
+#### Observation modes
+Observation modes tell observers what information to observe from the variables.
+
+Multiple observation modes can be defined for a single variable by using the bitwise or operator ("|"). If no observation mode is defined, the _CURRENT\_VALUE_ mode will be used.
+
+* _CURRENT\_VALUE_: observe the value of the variable at the end of each run
+* _AVERAGE\_VALUE_: observe the average value of the variable throughout all runs
 
 ### Benchmark block
 After observers have been registered and (optionally) variables have been set to be observed, a benchmark block is used to execute a piece of code _n_ times:
