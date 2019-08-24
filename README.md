@@ -4,17 +4,17 @@ Assertions is a framework for simplifying the development proccess of C++ applic
 Currently, Assertions has functionality to help write tests and benchmarks and to generate builds for the project. 
 
 #### Table of Contents
-* [The project file tree](#the project file tree)
-* [Running tests](#running tests)
-* [Building the Project](#building the project)
-* [Writing Tests](#writing tests)
-	* [Test case block](#test case block)
-	* [Asserting values](#asserting values)
-	* [Weird build errors](#weird build errors)
-* [Writing benchmarks](#writing benchmarks)
-	* [Registering observers](#registering observers)
-	* [Observing variables](#observing variables)
-	* [Benchmark block](#benchmark block)
+* [The project file tree](#the-project-file-tree)
+* [Running tests](#running-tests)
+* [Building the Project](#building-the-project)
+* [Writing Tests](#writing-tests)
+	* [Test case block](#test-case-block)
+	* [Asserting values](#asserting-values)
+	* [Weird build errors](#weird-build-errors)
+* [Writing benchmarks](#writing-benchmarks)
+	* [Registering observers](#registering-observers)
+	* [Observing variables](#observing-variables)
+	* [Benchmark block](#benchmark-block)
 
 ## The project file tree
 Assertions is build with a predefined file tree. Some folders of this tree can be changed by editing _CMakeLists.txt_, _build.sh_ and _test.sh_. The project tree is as follows:
@@ -49,13 +49,13 @@ Both will run all tests
 ./test.sh test_something
 ./test.sh test_something.cpp
 ```
-All three will run the test written in test\_something.cpp
+All three will run the test written in _tests/test\_something.cpp_
 
 Alternatively the test binaries can also be run directly but the output will not have as much information as when run from the script.
 
 Tests can also be run using CTest, but the entire test file will be considered a single test as opposed to each test case being its own individual test.
 
-## Building code
+## Building the project
 Assertions provides the script _build.sh_ for building code. Usage:
 ```
 ./build.sh [target] | [clean] | [cmake-only]
@@ -66,8 +66,8 @@ Assertions provides the script _build.sh_ for building code. Usage:
 
 If no option is passed then all possible targets are built
 
-## Writing test
-First step for writing a test is creating a _.cpp_ file with the "test\_" prefix inside _tests_.
+## Writing tests
+First step for writing a test is creating a _.cpp_ file with the _test\__ prefix inside the _tests_ folder.
 
 The tests should be written inside a _main_ function. The main function does not need to return anything and does not take any arguments.
 
@@ -159,7 +159,7 @@ int main (void) {
 The compiler will complain near a "try" keyword. Although you did not write this keyword anywhere, it is created during the expansion for the _test\_case_ macro
 
 ## Writing benchmarks
-Benchmakrs are used for analyzing performance aspects of the code beyond just execution time. A piece of code can be run multiple times with variable being fed to an observer during the code execution.
+Benchmakrs are used for analyzing performance aspects of the code beyond just execution time. A piece of code can be run multiple times with variables being fed to an observer for either human or automated analysis.
 
 A complete example of the usage of the benchmark functionality is available in [benchmark_counter.cpp](src/main/benchmark_counter.cpp)
 
@@ -168,19 +168,19 @@ Observers are entities which observe the values stored in variables and outputs 
 * TerminalObserver: displays latest variable values to stdout. Requires no parameters
 * TextFileObserver: outputs values of each run in human readable format for later analysis. Requires a string containing the path for the output file
 
-Observers are registered with the function register\_observer:
+Observers are registered with the function _register\_observer_:
 ```
 benchmark::register_observer(new TerminalObserver());
 benchmark::register_observer(new TextFileObserver("benchmark_results.txt"));
 ```
 
-register\_observer requires a pointer due to C++ abstract class constraints. If the observers are instantiated directly inside the function call, the function delete\_observers can be used to automatically delete all previously registered observers:
+_register\_observer_ requires a pointer due to C++ abstract class constraints. If the observers are instantiated directly inside the function call, the function _delete\_observers_ can be used to automatically delete all previously registered observers:
 ```
 benchmark::delete_observers();
 ```
 
 ### Observing variables
-By default, observers will always output total execution time and run number. Other variables can be added by using the function observe\_variable(variable\_label, variable):
+By default, observers will always output total execution time and run number. Other variables can be added by using the function _observe\_variable(variable\_label, variable)_:
 ```
 int x;
 benchmark::observe_variable("value of the x variable", x);
@@ -189,7 +189,8 @@ benchmark::observe_variable("value of the x variable", x);
 ### Benchmark block
 After observers have been registered and (optionally) variables have been set to be observed, a benchmark block is used to execute a piece of code _n_ times:
 ```
-benchmark("execute this code 100 times", 100) {
+unsigned n = 100;
+benchmark("execute this code 100 times", n) {
 	x = some_performance_critical_function();
 	y = some_other_performance_critical_function();
 } end_benchmark;
