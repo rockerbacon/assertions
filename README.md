@@ -16,6 +16,11 @@ Currently, Assertions has functionality to help write tests and benchmarks and t
 	* [Observing variables](#observing-variables)
 		* [Observation modes](#observation-modes)
 	* [Benchmark block](#benchmark-block)
+* [Easy Command-Line Interface](#easy-command-line-interface)
+	* [Declaring arguments](#declaring-arguments)
+		* [RequiredArgument](#requiredargument)
+		* [OptionalArgument](#optionalargument)
+		* [FlagArgument](#flagargument)
 
 ## The project file tree
 Assertions is build with a predefined file tree. Some folders of this tree can be changed by editing _CMakeLists.txt_, _build.sh_ and _test.sh_. The project tree is as follows:
@@ -211,3 +216,64 @@ benchmark("execute this code 100 times", n) {
 } end_benchmark;
 ```
 This piece of code will execute two performance critical functions 100 times. All registered observers are notified of updates after every loop.
+
+## Easy Command-Line Interface
+Assertions provides a simple way for capturing Command-Line arguments inside your main function.
+
+A full usage example is available in [hello_cli.cpp](src/main/hello_cli.cpp)
+
+### Declaring Arguments
+Arguments are declared by using special Argument classes which wrap themselves around standard types. Arguments will always have a label and can also have an optional abbreviated label:
+```
+cli::RequiredArgument<int> x_number ("x-number"); // label without abbreviation
+cli::RequiredArgument<float> y_number ("y-number", 'y'); // label with abbreviation
+```
+
+After the arguments are declared, the function _capture\_all\_arguments\_from_ is used to pass raw _main_ arguments into the declared arguments:
+```
+int main(int argc, char **argv) {
+	/* argument declarations */
+	cli::capture_all_arguments_from(argc, argv);
+	/* ... */
+```
+
+A program built with the arguments above can be called like so, note that the arguments' order doesn't matter:
+```
+program --x-number 3 --y-number 4.25
+program -y 4.25 --x-number 3
+```
+
+After values are captured inside the argument classes, their values can be easily accessed with the indirection operator ("*"):
+```
+int next_x_number = *x_number + 1
+```
+
+#### RequiredArgument
+An argument that must be passed to the program, otherwise an error is raised.
+```
+cli::RequiredArgument<int> required_integer("integer", 'i');
+```
+
+#### OptionalArgument
+An argument which doesn't need to be explicitly passed. A default value is used when the argument is not passed:
+```
+double low_precision_pi = 3.14;
+cli::OptionalArgument<double> pi("pi", low_precision_pi, 'p');
+```
+
+#### FlagArgument
+This argument takes no value, it's merely a flag which tells whether the argument was present during the program call or not:
+```
+cli::FlagArgument should_print_hello("print_hello");
+if (*should_print_hello)
+	std::cout << "hello" << std::endl;
+```
+
+For the example above the call would be like so:
+```
+program --print_hello
+```
+Or:
+```
+program
+```
