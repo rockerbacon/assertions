@@ -19,31 +19,27 @@ Observer::~Observer (void) {
 
 /*TERMINAL OBSERVER*/
 void TerminalObserver::notifyBenchmarkBegun (const string& benchmarkTitle, unsigned numberOfRuns) {
-	this->stopwatch.reset();
 	this->numberOfRuns = 0;
 	cout << "Executing '" << benchmarkTitle << "' " << numberOfRuns << " times..." << endl;
 	cout << SAVE_CURSOR_POSITION;
 }
 
 void TerminalObserver::notifyRunBegun (void) {
-	this->stopwatch.newLap();
+	// do nothing
 }
 
 void TerminalObserver::notifyRunEnded (void) {
 	this->numberOfRuns++;
 	cout << MOVE_CURSOR_TO_SAVED_POSITION << CLEAR_LINE;
-	cout << "\tRun: " << this->numberOfRuns << endl;
-	cout << CLEAR_LINE;
-	cout << "\tExecution time: " << this->stopwatch.formatedTotalTime() << endl;
-	for (auto observableVariable : this->variables_to_observe) {
+	for (auto observable_variable : this->variables_to_observe) {
 		cout << CLEAR_LINE;
-		cout << "\t" << observableVariable->getLabel() << ": " << observableVariable->getValue() << endl;
+		cout << "\t" << observable_variable->get_label() << ": " << observable_variable->get_value() << endl;
 	}
 	cout << endl;
 }
 
 void TerminalObserver::notifyBenchmarkEnded (void) {
-	cout << "Benchmark finished in " << this->stopwatch.formatedTotalTime() << endl;
+	// do nothing
 }
 /*TERMINAL OBSERVER*/
 
@@ -68,8 +64,8 @@ void TextFileObserver::notifyRunBegun (void) {
 }
 
 void TextFileObserver::notifyRunEnded (void) {
-	for (auto observableVariable : this->variables_to_observe) {
-		this->outputFile << '\t' << observableVariable->getLabel() << ": " << observableVariable->getValue() << endl;
+	for (auto observable_variable : this->variables_to_observe) {
+		this->outputFile << '\t' << observable_variable->get_label() << ": " << observable_variable->get_value() << endl;
 	}
 	this->outputFile << endl;
 }

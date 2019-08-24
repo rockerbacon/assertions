@@ -63,12 +63,12 @@ const char* segmentation_fault_signalled::what (void) const noexcept {
 
 void assert::signal_test_case_failed (const exception& e, const string& test_case_title) {
 	auto elapsed_time = chrono::high_resolution_clock::now() - assert::test_case_start;
-	cout << ERROR_TEXT_COLOR << "Test case '" << test_case_title << "' failed: " << e.what() << DEFAULT_TEXT_COLOR << " (" << format_chrono_duration(elapsed_time) << ")" << endl;
+	cout << ERROR_TEXT_COLOR << "Test case '" << test_case_title << "' failed: " << e.what() << DEFAULT_TEXT_COLOR << " (" << elapsed_time << ")" << endl;
 }
 
 void assert::signal_test_case_succeeded (const string& test_case_title) {
 	auto elapsed_time = chrono::high_resolution_clock::now() - assert::test_case_start;
-	cout << SUCCESS_TEXT_COLOR << "Test case '" << test_case_title << "' OK" << DEFAULT_TEXT_COLOR << " (" << format_chrono_duration(elapsed_time) << ")" << endl;
+	cout << SUCCESS_TEXT_COLOR << "Test case '" << test_case_title << "' OK" << DEFAULT_TEXT_COLOR << " (" << elapsed_time << ")" << endl;
 }
 
 void assert::signal_test_case_begun (void) {

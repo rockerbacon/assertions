@@ -18,6 +18,6 @@ namespace benchmark {
 			void newLap (void);
 	};
 
-	std::string format_chrono_duration (std::chrono::high_resolution_clock::duration duration);
+	std::ostream& operator<< (std::ostream &stream, std::chrono::high_resolution_clock::duration duration);
 
 }

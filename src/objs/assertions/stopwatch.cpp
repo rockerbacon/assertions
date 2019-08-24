@@ -1,4 +1,5 @@
 #include "assertions/stopwatch.h"
+#include <vector>
 
 using namespace benchmark;
 using namespace std;
@@ -13,22 +14,33 @@ void Stopwatch::reset (void) {
 }
 
 string Stopwatch::formatedTotalTime (void) const {
-	auto timeSinceBeginning = chrono::high_resolution_clock::now() - this->stopwatchBegin;
-	return format_chrono_duration(timeSinceBeginning);
+	auto time_since_beginning = chrono::high_resolution_clock::now() - this->stopwatchBegin;
+	std::ostringstream stream;
+	stream << time_since_beginning;
+	return stream.str();
 }
 
 string Stopwatch::formatedLapTime (void) const {
-	auto timeSinceLapBegun = chrono::high_resolution_clock::now() - this->lapBegin;
-	return format_chrono_duration(timeSinceLapBegun);
+	auto time_since_lap_begun = chrono::high_resolution_clock::now() - this->lapBegin;
+	std::ostringstream stream;
+	stream << time_since_lap_begun;
+	return stream.str();
 }
 
 void Stopwatch::newLap (void) {
 	this->lapBegin = chrono::high_resolution_clock::now();
 }
 
+struct TimeUnitCount {
+	string unit;
+	long long count;
+};
 
-string benchmark::format_chrono_duration (chrono::high_resolution_clock::duration duration) {
-	ostringstream str_builder;
+ostream& benchmark::operator<< (ostream &stream, chrono::high_resolution_clock::duration duration) {
+	vector<TimeUnitCount> time_unit_counts;
+	bool stream_altered;
+	size_t i;
+
 	auto hours = chrono::duration_cast<chrono::hours>(duration);
 	duration -= chrono::duration_cast<decltype(duration)>(hours);
 	auto minutes = chrono::duration_cast<chrono::minutes>(duration);
@@ -39,37 +51,28 @@ string benchmark::format_chrono_duration (chrono::high_resolution_clock::duratio
 	duration -= chrono::duration_cast<decltype(duration)>(milliseconds);
 	auto microseconds = chrono::duration_cast<chrono::microseconds>(duration);
 
-	auto hours_count = hours.count();
-	auto minutes_count = minutes.count();
-	auto seconds_count = seconds.count();
-	auto milliseconds_count = milliseconds.count();
-	auto microseconds_count = microseconds.count();
-	if (hours_count > 0) {
-		str_builder << hours_count << 'h';
-	}
-	if (minutes_count > 0) {
-		if (str_builder.tellp() > 0) {
-			str_builder << ' ';
+	time_unit_counts.reserve(5);
+
+	time_unit_counts.push_back({"h", hours.count()});
+	time_unit_counts.push_back({"m", minutes.count()});
+	time_unit_counts.push_back({"s", seconds.count()});
+	time_unit_counts.push_back({"ms", milliseconds.count()});
+	time_unit_counts.push_back({"us", microseconds.count()});
+
+	stream_altered = false;
+	for (i = 0; i < time_unit_counts.size()-1; i++) {
+		if (stream_altered) {
+			stream << ' ';
 		}
-		str_builder << minutes_count << 'm';
-	}
-	if (seconds_count > 0) {
-		if (str_builder.tellp() > 0) {
-			str_builder << ' ';
+		if (time_unit_counts[i].count > 0) {
+			stream << time_unit_counts[i].count << time_unit_counts[i].unit;
+			stream_altered = true;
 		}
-		str_builder << seconds_count << 's';
 	}
-	if (milliseconds_count > 0) {
-		if (str_builder.tellp() > 0) {
-			str_builder << ' ';
-		}
-		str_builder << milliseconds_count << "ms";
+
+	if (!stream_altered) {
+		stream << time_unit_counts[i].count << time_unit_counts[i].unit;
 	}
-	if (str_builder.tellp() == 0 && microseconds_count > 0) {
-		str_builder << ' ';
-		str_builder << microseconds_count << "us";
-	} else if (str_builder.tellp() == 0) {
-		str_builder << "0us";
-	}
-	return str_builder.str();
+
+	return stream;
 }
