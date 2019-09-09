@@ -11,7 +11,7 @@ int main (void) {
 
 	benchmark::observe_variable("x", x);
 	benchmark::observe_variable("y", y, benchmark::observation_mode::AVERAGE_VALUE | benchmark::observation_mode::CURRENT_VALUE);
-	benchmark::observe_variable("x^2", xsquared);
+	benchmark::observe_variable("x^2", xsquared, benchmark::observation_mode::MAXIMUM_VALUE | benchmark::observation_mode::MINIMUM_VALUE);
 	benchmark::observe_variable("y^2", ysquared, benchmark::observation_mode::AVERAGE_VALUE);
 	benchmark::observe_variable("x*y", xy);
 

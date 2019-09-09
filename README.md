@@ -205,6 +205,8 @@ Multiple observation modes can be defined for a single variable by using the bit
 
 * _CURRENT\_VALUE_: observe the value of the variable at the end of each run
 * _AVERAGE\_VALUE_: observe the average value of the variable throughout all runs
+* _MAXIMUM\_VALUE_: observe the maximum value of the variable throughout all runs
+* _MINIMUM\_VALUE_: observe the minimum value of the variable throughout all runs
 
 ### Benchmark block
 After observers have been registered and (optionally) variables have been set to be observed, a benchmark block is used to execute a piece of code _n_ times:
