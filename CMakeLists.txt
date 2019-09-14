@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 
-project("Your project name here" CXX)
+project("assertions" CXX)
 enable_testing()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+set(BUILD_STATIC_LIBRARY ON)
+set(BUILD_SHARED_LIBRARY OFF)
 
 set(tests_src_dir "tests")
 set(objs_src_dir "src/objs")
@@ -29,9 +32,16 @@ foreach(test_src_file ${tests_src_files})
 	add_test(NAME ${test_binary} COMMAND ${test_binary})
 endforeach()	
 
-
 file(GLOB programs_src_files "${programs_src_dir}/*.cpp")
 foreach(program_src_file ${programs_src_files})
 	string(REGEX REPLACE "(^(.*/)*${programs_src_dir}/)|(.cpp)" "" program_binary ${program_src_file})
 	add_executable(${program_binary} ${program_src_file} ${all_obj_binaries})
 endforeach()
+
+if (${BUILD_STATIC_LIBRARY})
+	add_library(${PROJECT_NAME} STATIC ${all_obj_binaries})
+endif()
+if (${BUILD_SHARED_LIBRARY})
+	add_library(${PROJECT_NAME} SHARED ${all_obj_binaries})
+endif()
+
