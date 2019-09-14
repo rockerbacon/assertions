@@ -26,7 +26,7 @@ using namespace benchmark;
 
 void when_segfault_is_signalled (int signal, siginfo_t *si, void *arg) {
 	assert::signal_test_case_failed(segmentation_fault_signalled(), assert::test_case_title);
-	exit(0);
+	exit(signal);
 }
 
 void assert::run_first_setup_if_needed (void) {

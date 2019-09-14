@@ -3,7 +3,7 @@
 
 int main (void) {
 
-	int runs = 10;
+	unsigned runs = 10;
 	int x, xsquared;
 	float y, ysquared, xy;
 

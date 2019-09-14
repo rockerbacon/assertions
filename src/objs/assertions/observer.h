@@ -20,7 +20,7 @@ namespace benchmark {
 			const std::string label;
 			const T& value;
 		public:
-			ObservableVariableTemplate (const std::string& label, const T& variable) : value(variable), label(label) {}
+			ObservableVariableTemplate (const std::string& label, const T& variable) : label(label), value(variable) {}
 
 			std::string get_label (void) {
 				return this->label;
