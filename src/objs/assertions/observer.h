@@ -152,8 +152,6 @@ namespace benchmark {
 	};
 
 	class TerminalObserver : public Observer {
-		private:
-			unsigned numberOfRuns;
 		public:
 			TerminalObserver (void) = default;
 
@@ -166,9 +164,9 @@ namespace benchmark {
 	class TextFileObserver : public Observer {
 		private:
 			std::ofstream outputFile;
-			unsigned numberOfRuns;
 		public:
 			TextFileObserver (const std::string& outputFilePath);
+			~TextFileObserver (void);
 
 			void notifyBenchmarkBegun (const std::string &benchmarkTitle, unsigned numberOfRuns);
 			void notifyRunBegun (void);
