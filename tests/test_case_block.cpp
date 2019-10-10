@@ -1,14 +1,20 @@
 #include "assertions/assert.h"
+#include <iostream>
 
+using namespace std;
 int main (void) {
 
-	test_case("test case block") {
-		int a = 2;
-	} end_test_case;
+	test_suite("test suite 1") {
 
-	test_case("multiple test case blocks") {
-		int b = 3;
-	} end_test_case;
+		test_case("test case block") {
+			int a = 2;
+		};
+
+		test_case("multiple test case blocks") {
+			int b = 3;
+		};
+
+	}
 
 	return 0;
 

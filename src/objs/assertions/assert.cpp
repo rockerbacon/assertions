@@ -9,21 +9,11 @@
 #define SUCCESS_TEXT_COLOR "\033[92m"
 #define DEFAULT_TEXT_COLOR "\033[0m"
 
-std::string assert::test_case_title;
-std::stringstream assert::actual_value_str;
-std::stringstream assert::expected_value_str;
-
-std::chrono::high_resolution_clock::time_point assert::test_case_start;
-
-bool assert::test_case_succeeded;
-bool assert::first_setup_done = false;
-
-struct sigaction signal_action;
+std::unordered_map<std::string, assert::test_suite> assert::test_suite_map;
 
 using namespace std;
 using namespace assert;
-using namespace benchmark;
-
+/*
 void segfault_signalled (int signal) {
 	auto elapsed_time = chrono::high_resolution_clock::now() - assert::test_case_start;
 	cout << ERROR_TEXT_COLOR << "Test case '" << assert::test_case_title << "' failed: segmentation fault, testing cannot continue" << DEFAULT_TEXT_COLOR << " (" << elapsed_time << ")" << endl;
@@ -40,33 +30,8 @@ void assert::run_first_setup_if_needed (void) {
 		assert::first_setup_done = true;
 	}
 }
+*/
 
-assertion_failed::assertion_failed (stringstream& actual_value, const string& comparator_description, stringstream& expected_value) {
-	ostringstream messageStream;
-	messageStream << "expected value " << comparator_description << " " << expected_value.rdbuf() << " but got " << actual_value.rdbuf();
-	this->message = messageStream.str();
-	stringstream().swap(actual_value);
-	stringstream().swap(expected_value);
-}
-
-assertion_failed::assertion_failed (const string& reason) {
-	this->message = reason;
-}
-
-const char* assertion_failed::what (void) const noexcept {
-	return this->message.c_str();
-}
-
-void assert::signal_test_case_succeeded (const string& test_case_title) {
-	auto elapsed_time = chrono::high_resolution_clock::now() - assert::test_case_start;
-	cout << SUCCESS_TEXT_COLOR << "Test case '" << test_case_title << "' OK" << DEFAULT_TEXT_COLOR << " (" << elapsed_time << ")" << endl;
-}
-
-void assert::signal_test_case_failed (const exception& e, const string& test_case_title) {
-       auto elapsed_time = chrono::high_resolution_clock::now() - assert::test_case_start;
-       cout << ERROR_TEXT_COLOR << "Test case '" << test_case_title << "' failed: " << e.what() << DEFAULT_TEXT_COLOR << " (" << elapsed_time << ")" << endl;
-}
-
-void assert::signal_test_case_begun (void) {
-	assert::test_case_start = chrono::high_resolution_clock::now();
+function<void(iostream &)>& test_suite::operator[](const string &test_case_description) {
+	return this->test_cases[test_case_description];
 }
