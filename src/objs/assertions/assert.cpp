@@ -14,6 +14,8 @@ using namespace assert;
 using namespace benchmark;
 
 unordered_map<string, assert::test_suite> assert::test_suite_map;
+tests_output_stream assert::tests_output(cout);
+
 /*
 void segfault_signalled (int signal) {
 	auto elapsed_time = chrono::high_resolution_clock::now() - assert::test_case_start;
@@ -33,24 +35,31 @@ void assert::run_first_setup_if_needed (void) {
 }
 */
 
-void test_suite::run_test_case (const string &test_case_description) {
-	this->running_test_cases.push_back(thread([this, test_case_description]() {
+assert_failed::assert_failed (const string &message)
+	: message(message)
+{}
 
-		stringstream test_case_output;
+const char* assert_failed::what(void) const noexcept {
+	return this->message.c_str();
+}
+
+void test_suite::run_test_case (const string &test_case_description, tests_output_stream &test_output) {
+	this->running_test_cases.push_back(thread([this, test_case_description, &test_output]() {
 
 		Stopwatch stopwatch;
 
 		try {
-			(*this)[test_case_description](test_case_output);
+			(*this)[test_case_description](test_output);
 
-			cout << SUCCESS_TEXT_COLOR << "Test case '" << test_case_description << "' OK";
-			cout << DEFAULT_TEXT_COLOR << " (" << stopwatch.formatedTotalTime() << ")" << endl;
-		} catch (const assert_failed &e) {
-			cout << ERROR_TEXT_COLOR << "Test case '" << test_case_description << "' failed: " << test_case_output.rdbuf();
-			cout << DEFAULT_TEXT_COLOR << " (" << stopwatch.formatedTotalTime() << ")" << endl;
+			test_output.lock();
+				test_output << '\t' << SUCCESS_TEXT_COLOR << "Test case '" << test_case_description << "' OK"
+							<< DEFAULT_TEXT_COLOR << " (" << stopwatch.formatedTotalTime() << ")" << endl;
+			test_output.unlock();
 		} catch (const exception &e) {
-			cout << ERROR_TEXT_COLOR << "Test case '" << test_case_description << "' failed: " << e.what();
-			cout << DEFAULT_TEXT_COLOR << " (" << stopwatch.formatedTotalTime() << ")" << endl;
+			test_output.lock();
+				test_output << '\t' << ERROR_TEXT_COLOR << "Test case '" << test_case_description << "' failed: " << e.what()
+							<< DEFAULT_TEXT_COLOR << " (" << stopwatch.formatedTotalTime() << ")" << endl;
+			test_output.unlock();
 		}
 
 	}));
@@ -62,6 +71,6 @@ void test_suite::wait_for_all_test_cases (void) {
 	}
 }
 
-function<void(iostream &)>& test_suite::operator[](const string &test_case_description) {
+test_case& test_suite::operator[](const string &test_case_description) {
 	return this->test_cases[test_case_description];
 }

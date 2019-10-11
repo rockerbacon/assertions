@@ -16,6 +16,16 @@ int main (void) {
 
 	}
 
+	test_suite("multiple test suites") {
+		test_case("trying something") {
+			ASSERT_NO_UNUSED_WARNING float pi = 3.14;
+		};
+	}
+
+	test_suite("empty test suite") {
+
+	}
+
 	return 0;
 
 }
