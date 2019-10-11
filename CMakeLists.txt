@@ -14,6 +14,8 @@ set(programs_src_dir "src/main")
 set(warnings "-Wall -Wextra")
 set(CMAKE_CXX_STANDARD 14)
 
+set(external_libraries "pthread")
+
 set(CMAKE_CXX_FLAGS "${warnings}")
 
 include_directories(${objs_src_dir})
@@ -29,6 +31,7 @@ file(GLOB_RECURSE tests_src_files "${tests_src_dir}/*.cpp")
 foreach(test_src_file ${tests_src_files})
 	string(REGEX REPLACE "(^(.*/)*${tests_src_dir}/)|(.cpp)" "" test_binary ${test_src_file})
 	add_executable(${test_binary} ${test_src_file} ${all_obj_binaries})
+	target_link_libraries(${test_binary} ${external_libraries})
 	add_test(NAME ${test_binary} COMMAND ${test_binary})
 endforeach()	
 
@@ -36,6 +39,7 @@ file(GLOB programs_src_files "${programs_src_dir}/*.cpp")
 foreach(program_src_file ${programs_src_files})
 	string(REGEX REPLACE "(^(.*/)*${programs_src_dir}/)|(.cpp)" "" program_binary ${program_src_file})
 	add_executable(${program_binary} ${program_src_file} ${all_obj_binaries})
+	target_link_libraries(${program_binary} ${external_libraries})
 endforeach()
 
 if (${BUILD_STATIC_LIBRARY})

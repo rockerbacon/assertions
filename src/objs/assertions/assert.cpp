@@ -9,10 +9,11 @@
 #define SUCCESS_TEXT_COLOR "\033[92m"
 #define DEFAULT_TEXT_COLOR "\033[0m"
 
-std::unordered_map<std::string, assert::test_suite> assert::test_suite_map;
-
 using namespace std;
 using namespace assert;
+using namespace benchmark;
+
+unordered_map<string, assert::test_suite> assert::test_suite_map;
 /*
 void segfault_signalled (int signal) {
 	auto elapsed_time = chrono::high_resolution_clock::now() - assert::test_case_start;
@@ -31,6 +32,35 @@ void assert::run_first_setup_if_needed (void) {
 	}
 }
 */
+
+void test_suite::run_test_case (const string &test_case_description) {
+	this->running_test_cases.push_back(thread([this, test_case_description]() {
+
+		stringstream test_case_output;
+
+		Stopwatch stopwatch;
+
+		try {
+			(*this)[test_case_description](test_case_output);
+
+			cout << SUCCESS_TEXT_COLOR << "Test case '" << test_case_description << "' OK";
+			cout << DEFAULT_TEXT_COLOR << " (" << stopwatch.formatedTotalTime() << ")" << endl;
+		} catch (const assert_failed &e) {
+			cout << ERROR_TEXT_COLOR << "Test case '" << test_case_description << "' failed: " << test_case_output.rdbuf();
+			cout << DEFAULT_TEXT_COLOR << " (" << stopwatch.formatedTotalTime() << ")" << endl;
+		} catch (const exception &e) {
+			cout << ERROR_TEXT_COLOR << "Test case '" << test_case_description << "' failed: " << e.what();
+			cout << DEFAULT_TEXT_COLOR << " (" << stopwatch.formatedTotalTime() << ")" << endl;
+		}
+
+	}));
+}
+
+void test_suite::wait_for_all_test_cases (void) {
+	for (auto &running_test_case : this->running_test_cases) {
+		running_test_case.join();
+	}
+}
 
 function<void(iostream &)>& test_suite::operator[](const string &test_case_description) {
 	return this->test_cases[test_case_description];
