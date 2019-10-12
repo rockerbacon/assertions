@@ -3,11 +3,6 @@
 using namespace std;
 using namespace terminal;
 
-ostream& terminal::operator<< (ostream& stream, const manipulator& manipulator) {
-	manipulator(stream);
-	return stream;
-}
-
 manipulator terminal::cursor_up (unsigned offset) {
 	return [offset](auto& stream) {
 		stream << "\E[" << offset << 'A';
@@ -63,3 +58,9 @@ manipulator terminal::ident (unsigned size) {
 		   stream << '\t';
 	};
 }
+
+ostream& operator<< (ostream& stream, const manipulator& manipulator) {
+	manipulator(stream);
+	return stream;
+}
+

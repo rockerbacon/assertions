@@ -13,18 +13,12 @@ void Stopwatch::reset (void) {
 	this->lapBegin = this->stopwatchBegin;
 }
 
-string Stopwatch::formatedTotalTime (void) const {
-	auto time_since_beginning = chrono::high_resolution_clock::now() - this->stopwatchBegin;
-	std::ostringstream stream;
-	stream << time_since_beginning;
-	return stream.str();
+chrono::high_resolution_clock::duration Stopwatch::totalTime (void) const {
+	return chrono::high_resolution_clock::now() - this->stopwatchBegin;
 }
 
-string Stopwatch::formatedLapTime (void) const {
-	auto time_since_lap_begun = chrono::high_resolution_clock::now() - this->lapBegin;
-	std::ostringstream stream;
-	stream << time_since_lap_begun;
-	return stream.str();
+chrono::high_resolution_clock::duration Stopwatch::lapTime (void) const {
+	return chrono::high_resolution_clock::now() - this->lapBegin;
 }
 
 void Stopwatch::newLap (void) {
@@ -36,7 +30,7 @@ struct TimeUnitCount {
 	long long count;
 };
 
-ostream& benchmark::operator<< (ostream &stream, chrono::high_resolution_clock::duration duration) {
+ostream& operator<< (ostream &stream, chrono::high_resolution_clock::duration duration) {
 	vector<TimeUnitCount> time_unit_counts;
 	bool stream_altered;
 	size_t i;
@@ -61,10 +55,10 @@ ostream& benchmark::operator<< (ostream &stream, chrono::high_resolution_clock::
 
 	stream_altered = false;
 	for (i = 0; i < time_unit_counts.size()-1; i++) {
-		if (stream_altered) {
-			stream << ' ';
-		}
 		if (time_unit_counts[i].count > 0) {
+			if (stream_altered) {
+				stream << ' ';
+			}
 			stream << time_unit_counts[i].count << time_unit_counts[i].unit;
 			stream_altered = true;
 		}
@@ -76,3 +70,4 @@ ostream& benchmark::operator<< (ostream &stream, chrono::high_resolution_clock::
 
 	return stream;
 }
+

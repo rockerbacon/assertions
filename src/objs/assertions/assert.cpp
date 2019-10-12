@@ -11,7 +11,7 @@
 
 using namespace std;
 using namespace assert;
-using namespace benchmark;
+using namespace terminal;
 
 unordered_map<string, assert::test_suite> assert::test_suite_map;
 terminal::stream assert::tests_output(cout);
@@ -49,15 +49,13 @@ const char* assert_failed::what(void) const noexcept {
 void test_suite::run_test_case (const string &test_case_description, terminal::stream &terminal) {
 	this->running_test_cases.push_back(thread([this, test_case_description, &terminal]() {
 
-		using namespace terminal;
-
-		Stopwatch stopwatch;
-		string testExecutionTime;
+		benchmark::Stopwatch stopwatch;
+		chrono::high_resolution_clock::duration testExecutionTime;
 		auto& test = (*this)[test_case_description];
 
 		try {
 			test.execute(terminal);
-			testExecutionTime = stopwatch.formatedTotalTime();
+			testExecutionTime = stopwatch.totalTime();
 
 			terminal.update([&](auto& terminal) {
 				terminal
@@ -72,9 +70,10 @@ void test_suite::run_test_case (const string &test_case_description, terminal::s
 						<< endl
 
 					<< restore_cursor_position << cursor_down(assert::output_offset);
+
 			});
 		} catch (const exception &e) {
-			testExecutionTime = stopwatch.formatedTotalTime();
+			testExecutionTime = stopwatch.totalTime();
 
 			terminal.update([&](auto& terminal) {
 				terminal
@@ -83,6 +82,8 @@ void test_suite::run_test_case (const string &test_case_description, terminal::s
 						<< style< bright<color::RED>() >
 							<< ident(test.depth) << "Test case '" << test_case_description << "' failed: " << e.what()
 						<< style< RESET_STYLE >
+
+						<< " (" << testExecutionTime << ")"
 
 						<< endl
 

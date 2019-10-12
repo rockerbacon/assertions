@@ -1,23 +1,25 @@
 #pragma once
 
 #include <chrono>
-#include <sstream>
+#include <ostream>
 
 namespace benchmark {
-	
+
 	class Stopwatch {
 		private:
-			std::chrono::time_point<std::chrono::high_resolution_clock> lapBegin;
-			std::chrono::time_point<std::chrono::high_resolution_clock> stopwatchBegin;
+			std::chrono::high_resolution_clock::time_point lapBegin;
+			std::chrono::high_resolution_clock::time_point stopwatchBegin;
 		public:
 			Stopwatch (void);
 
 			void reset (void);
-			std::string formatedTotalTime (void) const;
-			std::string formatedLapTime (void) const;
+			std::chrono::high_resolution_clock::duration totalTime (void) const;
+			std::chrono::high_resolution_clock::duration lapTime (void) const;
 			void newLap (void);
 	};
 
-	std::ostream& operator<< (std::ostream &stream, std::chrono::high_resolution_clock::duration duration);
 
 }
+
+std::ostream& operator<< (std::ostream &stream, std::chrono::high_resolution_clock::duration duration);
+

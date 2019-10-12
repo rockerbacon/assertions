@@ -8,7 +8,6 @@ namespace terminal {
 	typedef unsigned short style_code;
 	typedef std::function<void(std::ostream&)> manipulator;
 
-	std::ostream& operator<< (std::ostream& stream, const manipulator& manipulator);
 
 	namespace color {
 		constexpr style_code BLACK 		= 30;
@@ -58,3 +57,6 @@ namespace terminal {
 
 	manipulator ident (unsigned size);
 }
+
+std::ostream& operator<< (std::ostream& stream, const terminal::manipulator& manipulator);
+
