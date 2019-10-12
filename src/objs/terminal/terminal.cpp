@@ -48,6 +48,10 @@ void modifiable_output::clear_current_line(void) {
 	this->stream << "\E[2K";
 }
 
+void modifiable_output::flush (void) {
+	this->stream.flush();
+}
+
 void modifiable_output::save_cursor_position(void) {
 	this->stream << "\E[s";
 }
@@ -56,11 +60,15 @@ void modifiable_output::load_cursor_position(void) {
 	this->stream << "\E[u";
 }
 
-void modifiable_output::flush (void) {
-	this->stream.flush();
+void modifiable_output::show_cursor(void) {
+	this->stream << "\E[?25h";
 }
 
-output::output (ostream &output_stream) 
+void modifiable_output::hide_cursor(void) {
+	this->stream << "\E[?25l";
+}
+
+output::output (ostream &output_stream)
 	:	sync_mutex(new mutex),
 		output_stream(output_stream)
 {}

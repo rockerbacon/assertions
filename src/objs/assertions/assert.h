@@ -8,7 +8,7 @@
 #include <sstream>
 #include "terminal/terminal.h"
 
-#if __cplusplus >= 201703L 
+#if __cplusplus >= 201703L
 	#define NO_UNUSED_WARNING [[maybe_unused]]
 #else
 	#ifdef __GNUC__
@@ -83,6 +83,7 @@
 #define begin_all_tests\
 	::assert::tests_output.update([](auto& terminal) {\
 		terminal.save_cursor_position();\
+		terminal.hide_cursor();\
 	});
 
 #define end_all_tests\
@@ -93,7 +94,10 @@
 	}\
 	for (auto& suite : ::assert::test_suite_map) {\
 		suite.second.wait_for_all_test_cases();\
-	}
+	}\
+	::assert::tests_output.update([](auto& terminal) {\
+		terminal.show_cursor();\
+	});
 
 namespace assert {
 
@@ -129,7 +133,7 @@ namespace assert {
 	};
 
 	extern unordered_map<string, test_suite> test_suite_map;
-	
+
 	extern terminal::output tests_output;
 
 	extern unsigned output_offset;

@@ -41,7 +41,7 @@ namespace terminal {
 		private:
 			ostream& stream;
 		public:
-			modifiable_output(ostream &stream);	
+			modifiable_output(ostream &stream);
 
 			void cursor_up(unsigned offset);
 			void cursor_down(unsigned offset);
@@ -58,10 +58,13 @@ namespace terminal {
 			void save_cursor_position(void);
 			void load_cursor_position(void);
 
+			void show_cursor(void);
+			void hide_cursor(void);
+
 	};
 	class output {
 		private:
-			unique_ptr<mutex> sync_mutex; 
+			unique_ptr<mutex> sync_mutex;
 			modifiable_output output_stream;
 
 		public:
