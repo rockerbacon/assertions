@@ -4,6 +4,7 @@ project("assertions" CXX)
 enable_testing()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(CMAKE_CXX_STANDARD 17)
 set(BUILD_STATIC_LIBRARY ON)
 set(BUILD_SHARED_LIBRARY OFF)
 
@@ -11,12 +12,20 @@ set(tests_src_dir "tests")
 set(objs_src_dir "src/objs")
 set(programs_src_dir "src/main")
 
-set(warnings "-Wall -Wextra")
-set(CMAKE_CXX_STANDARD 14)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
+    "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
-set(external_libraries "pthread")
+	set(external_libraries "pthread")
+	set(compiler_flags "-fdiagnostics-color=always -Wall -Wextra")
 
-set(CMAKE_CXX_FLAGS "${warnings}")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+
+	set(external_libraries "")
+    set(compiler_flags "/W4 /EHsc")
+
+endif()
+
+set(CMAKE_CXX_FLAGS "${compiler_flags}")
 
 include_directories(${objs_src_dir})
 
@@ -33,7 +42,7 @@ foreach(test_src_file ${tests_src_files})
 	add_executable(${test_binary} ${test_src_file} ${all_obj_binaries})
 	target_link_libraries(${test_binary} ${external_libraries})
 	add_test(NAME ${test_binary} COMMAND ${test_binary})
-endforeach()	
+endforeach()
 
 file(GLOB programs_src_files "${programs_src_dir}/*.cpp")
 foreach(program_src_file ${programs_src_files})

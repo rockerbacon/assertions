@@ -53,7 +53,6 @@ for CURRENT_TEST in $TESTS
 do
 
 	determine_current_test_full_name
-	echo "Testing ${TEST_NAME}..."
 	if [ -d "${TESTS_DIR}/${CURRENT_TEST}" ]; then
 		echo "Executing tests from specific folder not yet supported"
 	else
@@ -61,18 +60,21 @@ do
 		determine_current_test_binary_file
 		if [ -f "$TEST_SOURCE_FILE" ]; then
 
-			"$SCRIPT_DIR/build.sh" --no-cmake  $TEST_FULL_NAME
+			echo "Building $TEST_FULL_NAME..."
+			BUILD_OUTPUT=$("$SCRIPT_DIR/build.sh" --no-cmake  $TEST_FULL_NAME 2>&1)
 
 			BUILD_STATUS=$?
 			if [ $BUILD_STATUS -eq 0 ]; then
-				TEST_OUTPUT=$($TEST_BINARY_FILE)
-				TEST_SUCCESSES=$(echo $TEST_OUTPUT | grep -o "' OK" | wc -l)
+				echo "Build finished successfully"
+				TEST_OUTPUT=$($TEST_BINARY_FILE | tee /dev/tty)
+				TEST_SUCCESSES=$(echo $TEST_OUTPUT | grep -o "': OK" | wc -l)
 				TEST_FAILURES=$(echo $TEST_OUTPUT | grep -o "' failed:" | wc -l)
 				SUCCESSFUL_TESTS=`expr $SUCCESSFUL_TESTS + $TEST_SUCCESSES`
 				FAILED_TESTS=`expr $FAILED_TESTS + $TEST_FAILURES`
-				echo "	${TEST_OUTPUT}" | tr '\n' '\032' | sed -e $(echo -e 's/\032/\\n\\t/g')
+				#echo "	${TEST_OUTPUT}" | tr '\n' '\032' | sed -e $(echo -e 's/\032/\\n\\t/g')
 			else
-				echo "	${red_color}build failed for ${TEST_SOURCE_FILE}${reset_color}"
+				echo "${red_color}Build failed${reset_color}"
+				echo "${BUILD_OUTPUT}"
 				FAILED_TESTS=`expr $FAILED_TESTS + 1`
 			fi
 		else
@@ -99,4 +101,6 @@ else
 	echo "$FAILED_TESTS failed${reset_color}"
 fi
 echo "-------------------TESTS SUMMARY-------------------"
+
+exit $FAILED_TESTS
 
