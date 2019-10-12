@@ -55,6 +55,9 @@ namespace terminal {
 
 			void flush (void);
 
+			void save_cursor_position(void);
+			void load_cursor_position(void);
+
 	};
 	class output {
 		private:

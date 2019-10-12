@@ -80,6 +80,11 @@
 		throw ::assert::assert_failed(error_message.str());\
 	}
 
+#define begin_all_tests\
+	::assert::tests_output.update([](auto& terminal) {\
+		terminal.save_cursor_position();\
+	});
+
 #define end_all_tests\
 	for (auto& suite : ::assert::test_suite_map) {\
 		for (auto& test : suite.second) {\

@@ -4,6 +4,8 @@
 using namespace std;
 int main (void) {
 
+	begin_all_tests;
+
 	test_suite("test suite 1") {
 
 		test_case("test case block") {

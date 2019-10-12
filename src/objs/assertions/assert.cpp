@@ -52,7 +52,6 @@ void test_suite::run_test_case (const string &test_case_description, terminal::o
 		Stopwatch stopwatch;
 		string testExecutionTime;
 		auto& test = (*this)[test_case_description];
-		auto actual_offset = assert::output_offset - test.output_offset;
 
 		try {
 			test.execute(test_output);
@@ -60,26 +59,30 @@ void test_suite::run_test_case (const string &test_case_description, terminal::o
 
 			test_output.update([&](auto& terminal) {
 
-				terminal.cursor_up(actual_offset);
+				terminal.load_cursor_position();
+				terminal.cursor_down(test.output_offset);
 				terminal.clear_current_line();
 
 				terminal.ident(test.depth);
 				terminal.print_line("Test case '" + test_case_description + "': OK (" + testExecutionTime + ")", SUCCESS_TEXT_STYLE);
 
-				terminal.cursor_down(actual_offset-1);
+				terminal.load_cursor_position();
+				terminal.cursor_down(assert::output_offset);
 			});
 		} catch (const exception &e) {
 			testExecutionTime = stopwatch.formatedTotalTime();
 
 			test_output.update([&](auto& terminal) {
 
-				terminal.cursor_up(actual_offset);
+				terminal.load_cursor_position();
+				terminal.cursor_down(test.output_offset);
 				terminal.clear_current_line();
 
 				terminal.ident(test.depth);
 				terminal.print_line("Test case '" + test_case_description + "' failed: " + e.what(), FAILURE_TEXT_STYLE);
 
-				terminal.cursor_down(actual_offset-1);
+				terminal.load_cursor_position();
+				terminal.cursor_down(assert::output_offset);
 			});
 		}
 

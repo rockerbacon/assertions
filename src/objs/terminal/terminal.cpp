@@ -48,6 +48,14 @@ void modifiable_output::clear_current_line(void) {
 	this->stream << "\E[2K";
 }
 
+void modifiable_output::save_cursor_position(void) {
+	this->stream << "\E[s";
+}
+
+void modifiable_output::load_cursor_position(void) {
+	this->stream << "\E[u";
+}
+
 void modifiable_output::flush (void) {
 	this->stream.flush();
 }
