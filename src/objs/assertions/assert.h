@@ -9,12 +9,12 @@
 #include "io/synchronous_iostream.h"
 
 #if __cplusplus >= 201703L 
-	#define ASSERT_NO_UNUSED_WARNING [[maybe_unused]]
+	#define NO_UNUSED_WARNING [[maybe_unused]]
 #else
 	#ifdef __GNUC__
-		#define ASSERT_NO_UNUSED_WARNING __attribute__((unused))
+		#define NO_UNUSED_WARNING __attribute__((unused))
 	#else
-		#define ASSERT_NO_UNUSED_WARNING
+		#define NO_UNUSED_WARNING
 	#endif
 #endif
 
@@ -31,7 +31,7 @@
 		ASSERT_GENERATE_LABEL(ASSERT_LABEL_END_TEST_SUITE_BLOCK):\
 			::assert::test_suite_map[test_suite_description].wait_for_all_test_cases();\
 	} else\
-		for (ASSERT_NO_UNUSED_WARNING auto &assert_test_suite_scope = ::assert::test_suite_map[test_suite_description];;)\
+		for (NO_UNUSED_WARNING auto &assert_test_suite_scope = ::assert::test_suite_map[test_suite_description];;)\
 			if (true)\
 				goto ASSERT_GENERATE_LABEL(ASSERT_LABEL_BEGIN_TEST_SUITE_BLOCK);\
 			else\
@@ -53,7 +53,7 @@
 			break;\
 		} else\
 			ASSERT_GENERATE_LABEL(ASSERT_LABEL_BEGIN_TEST_CASE_BLOCK):\
-				assert_test_suite_scope[test_case_description] = [](ASSERT_NO_UNUSED_WARNING ::assert::tests_output_stream& test_output) \
+				assert_test_suite_scope[test_case_description] = [](NO_UNUSED_WARNING ::assert::tests_output_stream& test_output) \
 
 #define ASSERT_FAIL_MESSAGE(actual_value, comprasion_operator_string, expected_value)\
 	"expected " << actual_value << " to be " << comprasion_operator_string << ' ' << expected_value
@@ -106,7 +106,3 @@ namespace assert {
 
 };
 
-constexpr bool assert_test_case_inside_test_suite_scope (void) {
-	using namespace assert;
-	return !std::is_same<decltype(assert_test_suite_scope), void*>();
-}
