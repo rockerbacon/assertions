@@ -1,4 +1,5 @@
 #include "terminal/terminal.h"
+#include <thread>
 
 using namespace terminal;
 
@@ -6,11 +7,11 @@ string terminal::stylize (color_code color, font_style_code font) {
 	return "\E"+to_string(font)+";"+to_string(color)+"m";
 }
 
-string stylize_color (color_code color) {
+string terminal::stylize_color (color_code color) {
 	return "\E["+to_string(color)+"m";
 }
 
-string stylize_font (font_style_code font) {
+string terminal::stylize_font (font_style_code font) {
 	return "\E["+to_string(font)+"m";
 }
 
@@ -34,12 +35,21 @@ void modifiable_output::cursor_right(unsigned offset) {
 	this->stream << "\E[" << offset << "C";
 }
 
-void modifiable_output::print(const string &str, const string &style) {
-	this->stream << style << str << "\E[0m";
+void modifiable_output::ident (unsigned identation_size) {
+	for (unsigned i = 0; i < identation_size; i++) {
+		this->stream << '\t';
+	}
+}
+void modifiable_output::print_line(const string &str, const string &style) {
+	this->stream << style << str << "\E[0m" << endl;
 }
 
 void modifiable_output::clear_current_line(void) {
 	this->stream << "\E[2K";
+}
+
+void modifiable_output::flush (void) {
+	this->stream.flush();
 }
 
 output::output (ostream &output_stream) 
@@ -48,6 +58,6 @@ output::output (ostream &output_stream)
 {}
 
 void output::update(const function<void(modifiable_output&)> &update_operation) {
-	lock_guard<mutex>(*this->sync_mutex);
+	lock_guard<mutex> lock(*this->sync_mutex);
 	update_operation(this->output_stream);
 }

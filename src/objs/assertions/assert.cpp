@@ -3,18 +3,21 @@
 #include <stdio.h>
 #include <signal.h>
 #include <string.h>
+#include <thread>
 #include "assertions/stopwatch.h"
 
-#define ERROR_TEXT_COLOR "\033[91m"
-#define SUCCESS_TEXT_COLOR "\033[92m"
-#define DEFAULT_TEXT_COLOR "\033[0m"
+#define SUCCESS_TEXT_STYLE ::terminal::stylize_color(::terminal::bright(::terminal::color_style::GREEN))
+#define FAILURE_TEXT_STYLE ::terminal::stylize_color(::terminal::bright(::terminal::color_style::RED))
 
 using namespace std;
 using namespace assert;
 using namespace benchmark;
 
 unordered_map<string, assert::test_suite> assert::test_suite_map;
-tests_output_stream assert::tests_output(cout);
+terminal::output assert::tests_output(cout);
+
+unsigned assert::output_offset = 0;
+unsigned assert::output_depth = 0;
 
 /*
 void segfault_signalled (int signal) {
@@ -43,23 +46,41 @@ const char* assert_failed::what(void) const noexcept {
 	return this->message.c_str();
 }
 
-void test_suite::run_test_case (const string &test_case_description, tests_output_stream &test_output) {
+void test_suite::run_test_case (const string &test_case_description, terminal::output &test_output) {
 	this->running_test_cases.push_back(thread([this, test_case_description, &test_output]() {
 
 		Stopwatch stopwatch;
+		string testExecutionTime;
+		auto& test = (*this)[test_case_description];
+		auto actual_offset = assert::output_offset - test.output_offset;
 
 		try {
-			(*this)[test_case_description](test_output);
+			test.execute(test_output);
+			testExecutionTime = stopwatch.formatedTotalTime();
 
-			test_output.lock();
-				test_output << '\t' << SUCCESS_TEXT_COLOR << "Test case '" << test_case_description << "' OK"
-							<< DEFAULT_TEXT_COLOR << " (" << stopwatch.formatedTotalTime() << ")" << endl;
-			test_output.unlock();
+			test_output.update([&](auto& terminal) {
+
+				terminal.cursor_up(actual_offset);
+				terminal.clear_current_line();
+
+				terminal.ident(test.depth);
+				terminal.print_line("Test case '" + test_case_description + "': OK (" + testExecutionTime + ")", SUCCESS_TEXT_STYLE);
+
+				terminal.cursor_down(actual_offset-1);
+			});
 		} catch (const exception &e) {
-			test_output.lock();
-				test_output << '\t' << ERROR_TEXT_COLOR << "Test case '" << test_case_description << "' failed: " << e.what()
-							<< DEFAULT_TEXT_COLOR << " (" << stopwatch.formatedTotalTime() << ")" << endl;
-			test_output.unlock();
+			testExecutionTime = stopwatch.formatedTotalTime();
+
+			test_output.update([&](auto& terminal) {
+
+				terminal.cursor_up(actual_offset);
+				terminal.clear_current_line();
+
+				terminal.ident(test.depth);
+				terminal.print_line("Test case '" + test_case_description + "' failed: " + e.what(), FAILURE_TEXT_STYLE);
+
+				terminal.cursor_down(actual_offset-1);
+			});
 		}
 
 	}));
@@ -74,3 +95,12 @@ void test_suite::wait_for_all_test_cases (void) {
 test_case& test_suite::operator[](const string &test_case_description) {
 	return this->test_cases[test_case_description];
 }
+
+decltype(test_suite::test_cases)::iterator test_suite::begin (void) {
+	return this->test_cases.begin();
+}
+
+decltype(test_suite::test_cases)::iterator test_suite::end (void) {
+	return this->test_cases.end();
+}
+

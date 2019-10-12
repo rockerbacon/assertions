@@ -48,9 +48,12 @@ namespace terminal {
 			void cursor_left(unsigned offset);
 			void cursor_right(unsigned offset);
 
-			void print (const string &str, const string &style = "");
+			void ident(unsigned identation_size);
+			void print_line (const string &str, const string &style = "");
 
 			void clear_current_line(void);
+
+			void flush (void);
 
 	};
 	class output {
