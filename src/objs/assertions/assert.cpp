@@ -14,7 +14,7 @@ using namespace assert;
 using namespace benchmark;
 
 unordered_map<string, assert::test_suite> assert::test_suite_map;
-terminal::output assert::tests_output(cout);
+terminal::stream assert::tests_output(cout);
 
 unsigned assert::output_offset = 0;
 unsigned assert::output_depth = 0;
@@ -46,43 +46,47 @@ const char* assert_failed::what(void) const noexcept {
 	return this->message.c_str();
 }
 
-void test_suite::run_test_case (const string &test_case_description, terminal::output &test_output) {
-	this->running_test_cases.push_back(thread([this, test_case_description, &test_output]() {
+void test_suite::run_test_case (const string &test_case_description, terminal::stream &terminal) {
+	this->running_test_cases.push_back(thread([this, test_case_description, &terminal]() {
+
+		using namespace terminal;
 
 		Stopwatch stopwatch;
 		string testExecutionTime;
 		auto& test = (*this)[test_case_description];
 
 		try {
-			test.execute(test_output);
+			test.execute(terminal);
 			testExecutionTime = stopwatch.formatedTotalTime();
 
-			test_output.update([&](auto& terminal) {
+			terminal.update([&](auto& terminal) {
+				terminal
+					<< restore_cursor_position	<< cursor_down(test.output_offset) << clear_line
 
-				terminal.load_cursor_position();
-				terminal.cursor_down(test.output_offset);
-				terminal.clear_current_line();
+						<< style< bright<color::GREEN>() >
+							<< ident(test.depth) << "Test case'" << test_case_description << "': OK"
+						<< style< RESET_STYLE >
 
-				terminal.ident(test.depth);
-				terminal.print_line("Test case '" + test_case_description + "': OK (" + testExecutionTime + ")", SUCCESS_TEXT_STYLE);
+						<< " (" << testExecutionTime << ")"
 
-				terminal.load_cursor_position();
-				terminal.cursor_down(assert::output_offset);
+						<< endl
+
+					<< restore_cursor_position << cursor_down(assert::output_offset);
 			});
 		} catch (const exception &e) {
 			testExecutionTime = stopwatch.formatedTotalTime();
 
-			test_output.update([&](auto& terminal) {
+			terminal.update([&](auto& terminal) {
+				terminal
+					<< restore_cursor_position << cursor_down(test.output_offset) << clear_line
 
-				terminal.load_cursor_position();
-				terminal.cursor_down(test.output_offset);
-				terminal.clear_current_line();
+						<< style< bright<color::RED>() >
+							<< ident(test.depth) << "Test case '" << test_case_description << "' failed: " << e.what()
+						<< style< RESET_STYLE >
 
-				terminal.ident(test.depth);
-				terminal.print_line("Test case '" + test_case_description + "' failed: " + e.what(), FAILURE_TEXT_STYLE);
+						<< endl
 
-				terminal.load_cursor_position();
-				terminal.cursor_down(assert::output_offset);
+					<< restore_cursor_position << cursor_down(assert::output_offset);
 			});
 		}
 
