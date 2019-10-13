@@ -43,9 +43,7 @@ unsigned live_terminal::test_case_discovered (const string& test_case_descriptio
 		<< ident(this->current_depth)
 
 		<< style<font::FAINT>
-			<< style<font::BLINK>
-				<< icon::CIRCLE << "  "
-			<< style<RESET_STYLE> << style<font::FAINT>
+			<< icon::CIRCLE << "  "
 
 			<< test_case_description
 		<< style<RESET_STYLE>

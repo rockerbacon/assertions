@@ -13,8 +13,9 @@ namespace parallel {
 		private:
 			std::mutex semaphore_mutex;
 			std::condition_variable notifier;
-			atomic<std::list<std::thread>> queue;
 			const unsigned max_queue_size;
+			unsigned active_executions;
+			atomic<unsigned> queued_executions;
 		public:
 			execution_queue(unsigned queue_size);
 

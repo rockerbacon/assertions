@@ -47,13 +47,18 @@ const char* assert_failed::what(void) const noexcept {
 	return this->message.c_str();
 }
 
-void test_suite::run_all_test_cases (void) {
+test_suite_t::test_suite_t (unsigned number_of_threads)
+	:	running_test_cases(number_of_threads)
+{}
+
+void test_suite_t::run_all_test_cases (void) {
 	for (auto &test : *this) {
-		this->running_test_cases.push_back(thread([&test]() {
+		this->running_test_cases.push_back([&test]() {
 
 			benchmark::Stopwatch stopwatch;
 			chrono::high_resolution_clock::duration test_duration;
 
+			assert::terminal->test_case_execution_begun(test.description, test.row_in_terminal);
 			try {
 				test.execute();
 				test_duration = stopwatch.totalTime();
@@ -64,13 +69,11 @@ void test_suite::run_all_test_cases (void) {
 				(**assert::failed_tests_count)++;
 				assert::terminal->test_case_failed(test.description, test.row_in_terminal, test_duration, e.what());
 			}
-		}));
+		});
 	}
 }
 
-void test_suite::wait_for_all_test_cases (void) {
-	for (auto &running_test_case : this->running_test_cases) {
-		running_test_case.join();
-	}
+void test_suite_t::wait_for_all_test_cases (void) {
+	this->running_test_cases.join_unfinished_executions();
 }
 

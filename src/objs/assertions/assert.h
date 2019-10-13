@@ -7,6 +7,7 @@
 #include <sstream>
 #include <terminal/terminal.h>
 #include <parallel/atomic.h>
+#include <parallel/execution_queue.h>
 #include <iostream>
 
 #if __cplusplus >= 201703L
@@ -32,7 +33,7 @@
 #define test_suite(test_suite_description)\
 	ASSERT_LABEL_NOT_DEFINED(assert_tests_scope, "cannot declare test_suite outside begin_tests");\
 	::assert::lines_written += ::assert::terminal->test_suite_block_begun(test_suite_description);\
-	assert_tests_scope.emplace_back();\
+	assert_tests_scope.emplace_back(::assert::number_of_threads);\
 	if(false) {\
 		ASSERT_GENERATE_LABEL(ASSERT_LABEL_END_TEST_SUITE_BLOCK):\
 			::assert::lines_written += ::assert::terminal->test_suite_block_ended();\
@@ -79,7 +80,7 @@
 #define begin_tests\
 	int main (void) {\
 		::assert::lines_written += ::assert::terminal->tests_begun();\
-		::std::list<::assert::test_suite> assert_tests_scope;\
+		::std::list<::assert::test_suite_t> assert_tests_scope;
 
 #define end_tests\
 		for (auto& suite : assert_tests_scope) {\
@@ -103,6 +104,8 @@ namespace assert {
 	extern parallel::atomic<unsigned> successful_tests_count;
 	extern parallel::atomic<unsigned> failed_tests_count;
 
+	constexpr unsigned number_of_threads = 2;
+
 	struct test_case {
 		std::function<void(void)> execute;
 		unsigned row_in_terminal;
@@ -118,10 +121,12 @@ namespace assert {
 			const char* what(void) const noexcept;
 	};
 
-	class test_suite : public std::list<test_case> {
+	class test_suite_t : public std::list<test_case> {
 		private:
-			std::list<std::thread> running_test_cases;
+			parallel::execution_queue running_test_cases;
 		public:
+			test_suite_t (unsigned number_of_threads);
+
 			void run_all_test_cases (void);
 			void wait_for_all_test_cases (void);
 
@@ -133,5 +138,5 @@ namespace assert {
 	// dummy for checking begin_tests scope
 	void assert_tests_scope(void);
 
-};
+}
 
