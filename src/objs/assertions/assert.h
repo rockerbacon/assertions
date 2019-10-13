@@ -22,27 +22,35 @@
 #define ASSERT_GENERATE_LABEL_PASTE(labelid, line) ASSERT_GENERATE_LABEL_PASTE_EXPAND(labelid, line)
 #define ASSERT_GENERATE_LABEL(labelid) ASSERT_GENERATE_LABEL_PASTE(labelid, __LINE__)
 
+#define ASSERT_LABEL_NOT_DEFINED(label, error_message)\
+	{\
+		using namespace assert;\
+		static_assert(!::std::is_same<decltype(label), decltype(::assert::label)>(), error_message);\
+	}
+
+
 #define ASSERT_UPDATE_TERMINAL_CURSOR_OFFSET\
-	::assert::output_offset++;\
-	::assert::tests_output.update([](auto& terminal) {\
+	::assert::lines_written++;\
+	::assert::cout.update([](auto& terminal) {\
 		terminal\
-			<< ::terminal::cursor_up(::assert::output_offset) << ::terminal::save_cursor_position\
-			<< ::terminal::cursor_down(::assert::output_offset);\
+			<< ::terminal::cursor_up(::assert::lines_written) << ::terminal::save_cursor_position\
+			<< ::terminal::cursor_down(::assert::lines_written);\
 	});
 
 #define test_suite(test_suite_description)\
-	::assert::test_suite_map[test_suite_description] = ::assert::test_suite();\
-	::assert::tests_output.update([](auto& terminal) {\
+	ASSERT_LABEL_NOT_DEFINED(assert_tests_scope, "cannot declare test_suite outside begin_tests");\
+	assert_tests_scope.emplace_back();\
+	::assert::cout.update([](auto& terminal) {\
 		terminal\
-			<< ::terminal::ident(::assert::output_depth) << "Test suite '" << test_suite_description << "':" << ::std::endl;\
+			<< ::terminal::ident(::assert::depth) << test_suite_description << ':' << ::std::endl;\
 	});\
 	ASSERT_UPDATE_TERMINAL_CURSOR_OFFSET;\
-	::assert::output_depth++;\
+	::assert::depth++;\
 	if(false) {\
 		ASSERT_GENERATE_LABEL(ASSERT_LABEL_END_TEST_SUITE_BLOCK):\
-			::assert::output_depth--;\
+			::assert::depth--;\
 	} else\
-		for (NO_UNUSED_WARNING auto &assert_test_suite_scope = ::assert::test_suite_map[test_suite_description];;)\
+		for (NO_UNUSED_WARNING auto &assert_test_suite_scope = assert_tests_scope.back();;)\
 			if (true)\
 				goto ASSERT_GENERATE_LABEL(ASSERT_LABEL_BEGIN_TEST_SUITE_BLOCK);\
 			else\
@@ -53,19 +61,24 @@
 						ASSERT_GENERATE_LABEL(ASSERT_LABEL_BEGIN_TEST_SUITE_BLOCK):
 
 #define test_case(test_case_description)\
-	{\
-		using namespace assert;\
-		static_assert(std::is_same<decltype(assert_test_suite_scope), ::assert::test_suite&>(), "cannot declare test_case outside a test_suite");\
-	}\
-	::assert::tests_output.update([](auto& terminal) {\
+	ASSERT_LABEL_NOT_DEFINED(assert_test_suite_scope, "cannot declare test_case outside test_suite");\
+	::assert::cout.update([](auto& terminal) {\
 		terminal\
 			<< ::terminal::style<::terminal::font::FAINT>\
-				<< ::terminal::ident(::assert::output_depth) << "Test case '" << test_case_description << "': running..." << ::std::endl\
+				<< ::terminal::ident(::assert::depth)\
+\
+				<< ::terminal::style<::terminal::font::BLINK>\
+					<< ::terminal::icon::CIRCLE << "  "\
+				<< ::terminal::style<::terminal::RESET_STYLE> << ::terminal::style<::terminal::font::FAINT>\
+\
+				<< test_case_description << ::std::endl\
+\
 			<< ::terminal::style<::terminal::RESET_STYLE>;\
 	});\
-	assert_test_suite_scope[test_case_description];\
-	assert_test_suite_scope[test_case_description].output_offset = ::assert::output_offset;\
-	assert_test_suite_scope[test_case_description].depth = ::assert::output_depth;\
+	assert_test_suite_scope.emplace_back();\
+	assert_test_suite_scope.back().output_offset = ::assert::lines_written;\
+	assert_test_suite_scope.back().depth = ::assert::depth;\
+	assert_test_suite_scope.back().description = test_case_description;\
 	ASSERT_UPDATE_TERMINAL_CURSOR_OFFSET;\
 	goto ASSERT_GENERATE_LABEL(ASSERT_LABEL_BEGIN_TEST_CASE_BLOCK);\
 	while(true)\
@@ -74,7 +87,7 @@
 			break;\
 		} else\
 			ASSERT_GENERATE_LABEL(ASSERT_LABEL_BEGIN_TEST_CASE_BLOCK):\
-				assert_test_suite_scope[test_case_description].execute = [](NO_UNUSED_WARNING ::terminal::stream& test_output) \
+				assert_test_suite_scope.back().execute = [](NO_UNUSED_WARNING ::terminal::stream& test_output) \
 
 #define ASSERT_FAIL_MESSAGE(actual_value, comprasion_operator_string, expected_value)\
 	"expected " << actual_value << " to be " << comprasion_operator_string << ' ' << expected_value
@@ -91,24 +104,25 @@
 		throw ::assert::assert_failed(error_message.str());\
 	}
 
-#define begin_all_tests\
-	::assert::tests_output.update([](auto& terminal) {\
-		terminal << ::terminal::save_cursor_position;\
-		terminal << ::terminal::hide_cursor;\
-	});
+#define begin_tests\
+	int main (void) {\
+		::std::list<::assert::test_suite> assert_tests_scope;\
+		::assert::cout.update([](auto& terminal) {\
+			terminal << ::terminal::hide_cursor;\
+		});
 
-#define end_all_tests\
-	for (auto& suite : ::assert::test_suite_map) {\
-		for (auto& test : suite.second) {\
-			suite.second.run_test_case(test.first, ::assert::tests_output);\
+#define end_tests\
+		for (auto& suite : assert_tests_scope) {\
+			suite.run_all_test_cases(::assert::cout);\
 		}\
-	}\
-	for (auto& suite : ::assert::test_suite_map) {\
-		suite.second.wait_for_all_test_cases();\
-	}\
-	::assert::tests_output.update([](auto& terminal) {\
-		terminal << ::terminal::show_cursor;\
-	});
+		for (auto& suite : assert_tests_scope) {\
+			suite.wait_for_all_test_cases();\
+		}\
+		::assert::cout.update([](auto& terminal) {\
+			terminal << ::terminal::restore_cursor_position << ::terminal::cursor_down(::assert::lines_written) << ::terminal::show_cursor;\
+		});\
+		return ::assert::number_of_tests - ::assert::successful_tests;\
+	}
 
 namespace assert {
 
@@ -116,6 +130,7 @@ namespace assert {
 		std::function<void(terminal::stream&)> execute;
 		unsigned output_offset;
 		unsigned depth;
+		std::string description;
 	};
 
 	class assert_failed : public std::exception {
@@ -127,29 +142,28 @@ namespace assert {
 			const char* what(void) const noexcept;
 	};
 
-	class test_suite {
+	class test_suite : public std::list<test_case> {
 		private:
-			std::unordered_map<std::string, test_case> test_cases;
 			std::list<std::thread> running_test_cases;
 		public:
-			void run_test_case (const std::string& test_case_description, terminal::stream& test_output);
+			void run_all_test_cases (terminal::stream& test_output);
 			void wait_for_all_test_cases (void);
 
-			test_case& operator[](const std::string& test_case_description);
-
-			decltype(test_cases)::iterator begin (void);
-			decltype(test_cases)::iterator end (void);
 	};
 
-	extern std::unordered_map<std::string, test_suite> test_suite_map;
+	extern terminal::stream cout;
 
-	extern terminal::stream tests_output;
+	extern unsigned lines_written;
+	extern unsigned depth;
 
-	extern unsigned output_offset;
-	extern unsigned output_depth;
+	extern unsigned number_of_tests;
+	extern unsigned successful_tests;
 
 	// dummy for checking test_suite scope
 	void assert_test_suite_scope(void);
+
+	// dummy for checking begin_tests scope
+	void assert_tests_scope(void);
 
 };
 

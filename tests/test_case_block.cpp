@@ -1,10 +1,6 @@
-#include "assertions/assert.h"
-#include <iostream>
+#include <assertions/assert.h>
 
-using namespace std;
-int main (void) {
-
-	begin_all_tests;
+begin_tests {
 
 	test_suite("test suite 1") {
 
@@ -36,7 +32,4 @@ int main (void) {
 
 	}
 
-	end_all_tests;
-	return 0;
-
-}
+} end_tests;

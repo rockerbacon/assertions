@@ -13,11 +13,13 @@ using namespace std;
 using namespace assert;
 using namespace terminal;
 
-unordered_map<string, assert::test_suite> assert::test_suite_map;
-terminal::stream assert::tests_output(cout);
+terminal::stream assert::cout(std::cout);
 
-unsigned assert::output_offset = 0;
-unsigned assert::output_depth = 0;
+unsigned assert::lines_written = 0;
+unsigned assert::depth = 0;
+
+unsigned assert::number_of_tests = 0;
+unsigned assert::successful_tests = 0;
 
 /*
 void segfault_signalled (int signal) {
@@ -46,69 +48,55 @@ const char* assert_failed::what(void) const noexcept {
 	return this->message.c_str();
 }
 
-void test_suite::run_test_case (const string &test_case_description, terminal::stream &terminal) {
-	this->running_test_cases.push_back(thread([this, test_case_description, &terminal]() {
+void test_suite::run_all_test_cases (terminal::stream &terminal) {
+	for (auto &test : *this) {
+		this->running_test_cases.push_back(thread([&test, &terminal]() {
 
-		benchmark::Stopwatch stopwatch;
-		chrono::high_resolution_clock::duration testExecutionTime;
-		auto& test = (*this)[test_case_description];
+			benchmark::Stopwatch stopwatch;
+			chrono::high_resolution_clock::duration testExecutionTime;
 
-		try {
-			test.execute(terminal);
-			testExecutionTime = stopwatch.totalTime();
+			try {
+				test.execute(terminal);
+				testExecutionTime = stopwatch.totalTime();
 
-			terminal.update([&](auto& terminal) {
-				terminal
-					<< restore_cursor_position	<< cursor_down(test.output_offset) << clear_line
+				terminal.update([&](auto& terminal) {
+					terminal
+						<< restore_cursor_position	<< cursor_down(test.output_offset) << clear_line
 
-						<< style< bright<color::GREEN>() >
-							<< ident(test.depth) << "Test case'" << test_case_description << "': OK"
-						<< style< RESET_STYLE >
+							<< style< bright<color::GREEN>() >
+								<< ident(test.depth) << icon::CIRCLE << "  " << test.description
+								<< " (" << testExecutionTime << ")"
+							<< style< RESET_STYLE >
 
-						<< " (" << testExecutionTime << ")"
+						<< endl;
 
-						<< endl
+				});
+			} catch (const exception &e) {
+				testExecutionTime = stopwatch.totalTime();
 
-					<< restore_cursor_position << cursor_down(assert::output_offset);
+				terminal.update([&](auto& terminal) {
+					terminal
+						<< restore_cursor_position << cursor_down(test.output_offset) << clear_line
 
-			});
-		} catch (const exception &e) {
-			testExecutionTime = stopwatch.totalTime();
+							<< style< bright<color::RED>() >
+								<< ident(test.depth) << icon::CIRCLE << "  " << test.description
+								<< " (" << testExecutionTime << ")"
+								<< ": " << e.what()
+							<< style< RESET_STYLE >
 
-			terminal.update([&](auto& terminal) {
-				terminal
-					<< restore_cursor_position << cursor_down(test.output_offset) << clear_line
 
-						<< style< bright<color::RED>() >
-							<< ident(test.depth) << "Test case '" << test_case_description << "' failed: " << e.what()
-						<< style< RESET_STYLE >
+						<< endl;
 
-						<< " (" << testExecutionTime << ")"
+				});
+			}
 
-						<< endl
-
-					<< restore_cursor_position << cursor_down(assert::output_offset);
-			});
-		}
-
-	}));
+		}));
+	}
 }
 
 void test_suite::wait_for_all_test_cases (void) {
 	for (auto &running_test_case : this->running_test_cases) {
 		running_test_case.join();
 	}
-}
-
-test_case& test_suite::operator[](const string &test_case_description) {
-	return this->test_cases[test_case_description];
-}
-
-decltype(test_suite::test_cases)::iterator test_suite::begin (void) {
-	return this->test_cases.begin();
-}
-
-decltype(test_suite::test_cases)::iterator test_suite::end (void) {
-	return this->test_cases.end();
 }
 

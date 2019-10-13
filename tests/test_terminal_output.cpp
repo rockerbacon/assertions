@@ -2,10 +2,9 @@
 #include <thread>
 
 using namespace std;
-int main (void) {
-	begin_all_tests;
+begin_tests {
 
-	test_suite("3 test cases outputs") {
+	test_suite("4 test cases outputs") {
 		test_case("wait 2652ms") {
 			this_thread::sleep_for(2652ms);
 		};
@@ -14,14 +13,24 @@ int main (void) {
 			this_thread::sleep_for(500ms);
 		};
 
+		test_case("wait 1500ms then fail") {
+			this_thread::sleep_for(1500ms);
+			assert_true(false);
+		};
+
 		test_case("wait 3512ms") {
 			this_thread::sleep_for(3512ms);
 		};
 	}
 
-	test_suite("4 test cases outputs") {
+	test_suite("5 test cases outputs") {
 		test_case("wait 1s") {
 			this_thread::sleep_for(1s);
+		};
+
+		test_case("wait 2s then fail") {
+			this_thread::sleep_for(2s);
+			assert_true(false);
 		};
 
 		test_case("wait 3s") {
@@ -47,6 +56,4 @@ int main (void) {
 		};
 	}
 
-	end_all_tests;
-	return 0;
-}
+} end_tests;

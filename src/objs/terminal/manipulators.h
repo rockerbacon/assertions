@@ -6,6 +6,7 @@
 namespace terminal {
 
 	typedef unsigned short style_code;
+	typedef const char* unicode_char;
 	typedef std::function<void(std::ostream&)> manipulator;
 
 
@@ -26,6 +27,11 @@ namespace terminal {
 		constexpr style_code FAINT		= 2;
 		constexpr style_code ITALIC		= 3;
 		constexpr style_code UNDERLINE	= 4;
+		constexpr style_code BLINK		= 5;
+	};
+
+	namespace icon {
+		constexpr unicode_char CIRCLE = "\u25CF";
 	};
 
 	constexpr style_code RESET_STYLE = 0;

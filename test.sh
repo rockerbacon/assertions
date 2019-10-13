@@ -41,8 +41,8 @@ else
 	TESTS="${TESTS_DIR}/*.cpp"
 fi
 
-FAILED_TESTS=0
-SUCCESSFUL_TESTS=0
+TOTAL_FAILED_TESTS=0
+TOTAL_SUCCESSFUL_TESTS=0
 IGNORED_TESTS=0
 
 "$SCRIPT_DIR/build.sh" --cmake-only
@@ -66,12 +66,13 @@ do
 			BUILD_STATUS=$?
 			if [ $BUILD_STATUS -eq 0 ]; then
 				echo "Build finished successfully"
+
 				TEST_OUTPUT=$($TEST_BINARY_FILE | tee /dev/tty)
-				TEST_SUCCESSES=$(echo $TEST_OUTPUT | grep -o "': OK" | wc -l)
-				TEST_FAILURES=$(echo $TEST_OUTPUT | grep -o "' failed:" | wc -l)
-				SUCCESSFUL_TESTS=`expr $SUCCESSFUL_TESTS + $TEST_SUCCESSES`
-				FAILED_TESTS=`expr $FAILED_TESTS + $TEST_FAILURES`
-				#echo "	${TEST_OUTPUT}" | tr '\n' '\032' | sed -e $(echo -e 's/\032/\\n\\t/g')
+				CURRENT_FAILED_TESTS=$?
+				CURRENT_TESTS_RAN=$(echo -e "$TEST_OUTPUT" | grep -oP "\x{25CF}" | wc -l)
+				CURRENT_TESTS_RAN=`expr $CURRENT_TESTS_RAN / 2`
+				TOTAL_SUCCESSFUL_TESTS=`expr $CURRENT_TESTS_RAN - $CURRENT_FAILED_TESTS + $TOTAL_SUCCESSFUL_TESTS`
+				TOTAL_FAILED_TESTS=`expr $CURRENT_FAILED_TESTS + $TOTAL_FAILED_TESTS`
 			else
 				echo "${red_color}Build failed${reset_color}"
 				echo "${BUILD_OUTPUT}"
@@ -90,17 +91,17 @@ echo "-------------------INDIVIDUAL TESTS-------------------"
 
 echo	# line feed
 echo "-------------------TESTS SUMMARY-------------------"
-if [ $SUCCESSFUL_TESTS -gt 0 ]; then
-	echo "${green_color}$SUCCESSFUL_TESTS passed${reset_color}"
+if [ $TOTAL_SUCCESSFUL_TESTS -gt 0 ]; then
+	echo "${green_color}$TOTAL_SUCCESSFUL_TESTS tests passed${reset_color}"
 else
-	echo "$SUCCESSFUL_TESTS passed${reset_color}"
+	echo "$TOTAL_SUCCESSFUL_TESTS tests passed${reset_color}"
 fi
-if [ $FAILED_TESTS -gt 0 ]; then
-	echo "${red_color}$FAILED_TESTS failed${reset_color}"
+if [ $TOTAL_FAILED_TESTS -gt 0 ]; then
+	echo "${red_color}$TOTAL_FAILED_TESTS tests failed${reset_color}"
 else
-	echo "$FAILED_TESTS failed${reset_color}"
+	echo "$TOTAL_FAILED_TESTS tests failed${reset_color}"
 fi
 echo "-------------------TESTS SUMMARY-------------------"
 
-exit $FAILED_TESTS
+exit $TOTAL_FAILED_TESTS
 
