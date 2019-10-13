@@ -2,9 +2,10 @@
 #include <iostream>
 #include <stdio.h>
 #include <signal.h>
-#include <string.h>
+#include <string>
 #include <thread>
-#include "assertions/stopwatch.h"
+#include <assertions/stopwatch.h>
+#include <terminal/live_terminal.h>
 
 #define SUCCESS_TEXT_STYLE ::terminal::stylize_color(::terminal::bright(::terminal::color_style::GREEN))
 #define FAILURE_TEXT_STYLE ::terminal::stylize_color(::terminal::bright(::terminal::color_style::RED))
@@ -13,10 +14,9 @@ using namespace std;
 using namespace assert;
 using namespace terminal;
 
-parallel::atomic<ostream> assert::cout(std::cout);
+unique_ptr<terminal_interface> assert::terminal(new live_terminal);
 
 unsigned assert::lines_written = 0;
-unsigned assert::depth = 0;
 
 unsigned number_of_successful_tests = 0;
 parallel::atomic<unsigned> assert::successful_tests_count(number_of_successful_tests);
@@ -55,48 +55,26 @@ void test_suite::run_all_test_cases (void) {
 		this->running_test_cases.push_back(thread([&test]() {
 
 			benchmark::Stopwatch stopwatch;
-			chrono::high_resolution_clock::duration testExecutionTime;
+			chrono::high_resolution_clock::duration test_duration;
 
 			try {
 				test.execute();
-				testExecutionTime = stopwatch.totalTime();
+				test_duration = stopwatch.totalTime();
 
 				assert::successful_tests_count.access([](auto& successful_tests_count) {
 					successful_tests_count++;
 				});
 
-				assert::cout.access([&](auto& terminal) {
-					terminal
-						<< restore_cursor_position	<< cursor_down(test.output_offset) << clear_line
-
-							<< style< bright<color::GREEN>() >
-								<< ident(test.depth) << icon::CIRCLE << "  " << test.description
-								<< " (" << testExecutionTime << ")"
-
-						<< endl;
-
-				});
+				assert::terminal->test_case_succeeded(test.description, test.row_in_terminal, test_duration);
 			} catch (const exception &e) {
-				testExecutionTime = stopwatch.totalTime();
+				test_duration = stopwatch.totalTime();
 
 				assert::failed_tests_count.access([](auto& failed_tests_count) {
 					failed_tests_count++;
 				});
 
-				assert::cout.access([&](auto& terminal) {
-					terminal
-						<< restore_cursor_position << cursor_down(test.output_offset) << clear_line
-
-							<< style< bright<color::RED>() >
-								<< ident(test.depth) << icon::CIRCLE << "  " << test.description
-								<< " (" << testExecutionTime << ")"
-								<< ": " << e.what()
-
-						<< endl;
-
-				});
+				assert::terminal->test_case_failed(test.description, test.row_in_terminal, test_duration, e.what());
 			}
-
 		}));
 	}
 }
