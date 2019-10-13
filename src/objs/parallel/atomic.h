@@ -19,10 +19,6 @@ namespace parallel {
 			T& operator* (void) {
 				return this->object;
 			}
-
-			T& operator-> (void) {
-				return this->variable;
-			}
 	};
 
 	template<typename T>
