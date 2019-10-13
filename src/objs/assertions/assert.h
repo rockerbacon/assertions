@@ -89,9 +89,9 @@
 			suite.wait_for_all_test_cases();\
 		}\
 		::assert::terminal->tests_ended();\
-		::std::cerr << "successful_tests=" << ::assert::successful_tests_count.get_copy() << ::std::endl;\
-		::std::cerr << "failed_tests=" << ::assert::failed_tests_count.get_copy() << std::endl;\
-		return ::assert::failed_tests_count.get_copy();\
+		::std::cerr << "successful_tests=" << **::assert::successful_tests_count << ::std::endl;\
+		::std::cerr << "failed_tests=" << **::assert::failed_tests_count<< std::endl;\
+		return **::assert::failed_tests_count;\
 	}
 
 namespace assert {

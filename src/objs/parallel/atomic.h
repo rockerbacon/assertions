@@ -2,33 +2,49 @@
 
 #include <memory>
 #include <mutex>
-#include <functional>
 
 namespace parallel {
+
+	template<typename T>
+	class atomic_access {
+		private:
+			std::lock_guard<std::mutex> lock;
+			T& object;
+		public:
+			atomic_access(T& object, std::mutex &mutex)
+				:	lock(mutex),
+					object(object)
+			{}
+
+			T& operator* (void) {
+				return this->object;
+			}
+
+			T& operator-> (void) {
+				return this->variable;
+			}
+	};
 
 	template<typename T>
 	class atomic {
 		private:
 			std::unique_ptr<std::mutex> sync_mutex;
-			T& object;
+			T object;
 
 		public:
-			atomic(T& object)
-			   :	sync_mutex(new std::mutex),
+			atomic(void)
+				:	sync_mutex(new std::mutex),
+					object()
+			{}
+
+			atomic(T object)
+				:	sync_mutex(new std::mutex),
 				   	object(object)
 			{}
 
-			void access(const std::function<void(T&)>& update_operation) {
-				std::lock_guard<std::mutex> lock(*this->sync_mutex);
-				update_operation(this->object);
+			atomic_access<T> operator* (void) {
+				return atomic_access<T>(this->object, *this->sync_mutex);
 			}
-
-			T get_copy (void) {
-				std::lock_guard<std::mutex> lock(*this->sync_mutex);
-				T copy(this->object);
-				return copy;
-			}
-
 	};
 
 }

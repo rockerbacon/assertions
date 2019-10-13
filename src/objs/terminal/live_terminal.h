@@ -3,12 +3,13 @@
 #include <terminal/terminal.h>
 #include <unordered_map>
 #include <parallel/atomic.h>
+#include <vector>
 
 namespace terminal {
 
 	class live_terminal : public terminal_interface {
 		private:
-			parallel::atomic<std::ostream> out_stream;
+			parallel::atomic<std::ostream&> out_stream;
 			unsigned current_depth;
 			std::vector<unsigned> depth_map;
 		public:

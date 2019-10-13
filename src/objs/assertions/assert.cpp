@@ -18,11 +18,8 @@ unique_ptr<terminal_interface> assert::terminal(new live_terminal);
 
 unsigned assert::lines_written = 0;
 
-unsigned number_of_successful_tests = 0;
-parallel::atomic<unsigned> assert::successful_tests_count(number_of_successful_tests);
-
-unsigned number_of_failed_tests = 0;
-parallel::atomic<unsigned> assert::failed_tests_count(number_of_failed_tests);
+parallel::atomic<unsigned> assert::successful_tests_count(0);
+parallel::atomic<unsigned> assert::failed_tests_count(0);
 /*
 void segfault_signalled (int signal) {
 	auto elapsed_time = chrono::high_resolution_clock::now() - assert::test_case_start;
@@ -60,19 +57,11 @@ void test_suite::run_all_test_cases (void) {
 			try {
 				test.execute();
 				test_duration = stopwatch.totalTime();
-
-				assert::successful_tests_count.access([](auto& successful_tests_count) {
-					successful_tests_count++;
-				});
-
+				(**assert::successful_tests_count)++;
 				assert::terminal->test_case_succeeded(test.description, test.row_in_terminal, test_duration);
 			} catch (const exception &e) {
 				test_duration = stopwatch.totalTime();
-
-				assert::failed_tests_count.access([](auto& failed_tests_count) {
-					failed_tests_count++;
-				});
-
+				(**assert::failed_tests_count)++;
 				assert::terminal->test_case_failed(test.description, test.row_in_terminal, test_duration, e.what());
 			}
 		}));
