@@ -13,14 +13,16 @@ using namespace std;
 using namespace assert;
 using namespace terminal;
 
-terminal::stream assert::cout(std::cout);
+parallel::atomic<ostream> assert::cout(std::cout);
 
 unsigned assert::lines_written = 0;
 unsigned assert::depth = 0;
 
-unsigned assert::number_of_tests = 0;
-unsigned assert::successful_tests = 0;
+unsigned number_of_successful_tests = 0;
+parallel::atomic<unsigned> assert::successful_tests_count(number_of_successful_tests);
 
+unsigned number_of_failed_tests = 0;
+parallel::atomic<unsigned> assert::failed_tests_count(number_of_failed_tests);
 /*
 void segfault_signalled (int signal) {
 	auto elapsed_time = chrono::high_resolution_clock::now() - assert::test_case_start;
@@ -48,25 +50,28 @@ const char* assert_failed::what(void) const noexcept {
 	return this->message.c_str();
 }
 
-void test_suite::run_all_test_cases (terminal::stream &terminal) {
+void test_suite::run_all_test_cases (void) {
 	for (auto &test : *this) {
-		this->running_test_cases.push_back(thread([&test, &terminal]() {
+		this->running_test_cases.push_back(thread([&test]() {
 
 			benchmark::Stopwatch stopwatch;
 			chrono::high_resolution_clock::duration testExecutionTime;
 
 			try {
-				test.execute(terminal);
+				test.execute();
 				testExecutionTime = stopwatch.totalTime();
 
-				terminal.update([&](auto& terminal) {
+				assert::successful_tests_count.access([](auto& successful_tests_count) {
+					successful_tests_count++;
+				});
+
+				assert::cout.access([&](auto& terminal) {
 					terminal
 						<< restore_cursor_position	<< cursor_down(test.output_offset) << clear_line
 
 							<< style< bright<color::GREEN>() >
 								<< ident(test.depth) << icon::CIRCLE << "  " << test.description
 								<< " (" << testExecutionTime << ")"
-							<< style< RESET_STYLE >
 
 						<< endl;
 
@@ -74,7 +79,11 @@ void test_suite::run_all_test_cases (terminal::stream &terminal) {
 			} catch (const exception &e) {
 				testExecutionTime = stopwatch.totalTime();
 
-				terminal.update([&](auto& terminal) {
+				assert::failed_tests_count.access([](auto& failed_tests_count) {
+					failed_tests_count++;
+				});
+
+				assert::cout.access([&](auto& terminal) {
 					terminal
 						<< restore_cursor_position << cursor_down(test.output_offset) << clear_line
 
@@ -82,8 +91,6 @@ void test_suite::run_all_test_cases (terminal::stream &terminal) {
 								<< ident(test.depth) << icon::CIRCLE << "  " << test.description
 								<< " (" << testExecutionTime << ")"
 								<< ": " << e.what()
-							<< style< RESET_STYLE >
-
 
 						<< endl;
 

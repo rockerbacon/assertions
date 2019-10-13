@@ -1,7 +1,7 @@
 #pragma once
 
 #include <ostream>
-#include "terminal/stream.h"
+#include <functional>
 
 namespace terminal {
 

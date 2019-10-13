@@ -47,6 +47,8 @@ IGNORED_TESTS=0
 
 "$SCRIPT_DIR/build.sh" --cmake-only
 
+exec 3>&1 # save stdout address
+
 echo	# line feed
 echo "-------------------INDIVIDUAL TESTS-------------------"
 for CURRENT_TEST in $TESTS
@@ -67,12 +69,11 @@ do
 			if [ $BUILD_STATUS -eq 0 ]; then
 				echo "Build finished successfully"
 
-				TEST_OUTPUT=$($TEST_BINARY_FILE | tee /dev/tty)
-				CURRENT_FAILED_TESTS=$?
-				CURRENT_TESTS_RAN=$(echo -e "$TEST_OUTPUT" | grep -oP "\x{25CF}" | wc -l)
-				CURRENT_TESTS_RAN=`expr $CURRENT_TESTS_RAN / 2`
-				TOTAL_SUCCESSFUL_TESTS=`expr $CURRENT_TESTS_RAN - $CURRENT_FAILED_TESTS + $TOTAL_SUCCESSFUL_TESTS`
-				TOTAL_FAILED_TESTS=`expr $CURRENT_FAILED_TESTS + $TOTAL_FAILED_TESTS`
+				TEST_STDERR_OUTPUT=$($TEST_BINARY_FILE 2>&1 1>&3)	# stderr is captured, stdout is left alone
+				SUCCESSFUL_TESTS_THIS_RUN=$(echo "$TEST_STDERR_OUTPUT" | grep "successful_tests=" | sed "s/successful_tests=//")
+				FAILED_TESTS_THIS_RUN=$(echo "$TEST_STDERR_OUTPUT" | grep "failed_tests=" | sed "s/failed_tests=//")
+				TOTAL_SUCCESSFUL_TESTS=`expr $SUCCESSFUL_TESTS_THIS_RUN + $TOTAL_SUCCESSFUL_TESTS`
+				TOTAL_FAILED_TESTS=`expr $FAILED_TESTS_THIS_RUN + $TOTAL_FAILED_TESTS`
 			else
 				echo "${red_color}Build failed${reset_color}"
 				echo "${BUILD_OUTPUT}"
@@ -88,6 +89,8 @@ do
 
 done
 echo "-------------------INDIVIDUAL TESTS-------------------"
+
+exec 3>&- # clear FD
 
 echo	# line feed
 echo "-------------------TESTS SUMMARY-------------------"
