@@ -11,11 +11,11 @@ namespace parallel {
 
 	class execution_queue {
 		private:
-			std::mutex semaphore_mutex;
+			std::mutex mutex;
 			std::condition_variable notifier;
 			const unsigned max_queue_size;
-			unsigned active_executions;
-			atomic<unsigned> queued_executions;
+			unsigned available_threads;
+			unsigned queued_executions;
 		public:
 			execution_queue(unsigned queue_size);
 

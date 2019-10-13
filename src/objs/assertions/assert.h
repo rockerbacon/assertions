@@ -31,14 +31,13 @@
 	}
 
 #define test_suite(test_suite_description)\
-	ASSERT_LABEL_NOT_DEFINED(assert_tests_scope, "cannot declare test_suite outside begin_tests");\
+	ASSERT_LABEL_NOT_DEFINED(assert_test_suite_block, "cannot declare test_suite outside begin_tests");\
 	::assert::lines_written += ::assert::terminal->test_suite_block_begun(test_suite_description);\
-	assert_tests_scope.emplace_back(::assert::number_of_threads);\
 	if(false) {\
 		ASSERT_GENERATE_LABEL(ASSERT_LABEL_END_TEST_SUITE_BLOCK):\
 			::assert::lines_written += ::assert::terminal->test_suite_block_ended();\
 	} else\
-		for (NO_UNUSED_WARNING auto &assert_test_suite_scope = assert_tests_scope.back();;)\
+		for (::assert::test_case assert_test_case_block;;)\
 			if (true)\
 				goto ASSERT_GENERATE_LABEL(ASSERT_LABEL_BEGIN_TEST_SUITE_BLOCK);\
 			else\
@@ -49,18 +48,16 @@
 						ASSERT_GENERATE_LABEL(ASSERT_LABEL_BEGIN_TEST_SUITE_BLOCK):
 
 #define test_case(test_case_description)\
-	ASSERT_LABEL_NOT_DEFINED(assert_test_suite_scope, "cannot declare test_case outside test_suite");\
-	assert_test_suite_scope.emplace_back();\
-	assert_test_suite_scope.back().row_in_terminal = ::assert::lines_written;\
-	assert_test_suite_scope.back().description = test_case_description;\
-	::assert::lines_written += ::assert::terminal->test_case_discovered(test_case_description);\
+	ASSERT_LABEL_NOT_DEFINED(assert_test_case_block, "cannot declare test_case outside test_suite");\
 	goto ASSERT_GENERATE_LABEL(ASSERT_LABEL_BEGIN_TEST_CASE_BLOCK);\
 	while(true)\
 		if (true) {\
+			::assert::queue_test_for_execution(test_case_description, ::assert::lines_written, assert_test_case_block);\
+			::assert::lines_written += ::assert::terminal->test_case_discovered(test_case_description);\
 			break;\
 		} else\
 			ASSERT_GENERATE_LABEL(ASSERT_LABEL_BEGIN_TEST_CASE_BLOCK):\
-				assert_test_suite_scope.back().execute = []()
+				assert_test_case_block = []()
 
 #define ASSERT_FAIL_MESSAGE(actual_value, comprasion_operator_string, expected_value)\
 	"expected " << actual_value << " to be " << comprasion_operator_string << ' ' << expected_value
@@ -79,16 +76,11 @@
 
 #define begin_tests\
 	int main (void) {\
+		NO_UNUSED_WARNING int assert_test_suite_block;\
 		::assert::lines_written += ::assert::terminal->tests_begun();\
-		::std::list<::assert::test_suite_t> assert_tests_scope;
 
 #define end_tests\
-		for (auto& suite : assert_tests_scope) {\
-			suite.run_all_test_cases();\
-		}\
-		for (auto& suite : assert_tests_scope) {\
-			suite.wait_for_all_test_cases();\
-		}\
+		::assert::test_execution_queue.join_unfinished_executions();\
 		::assert::terminal->tests_ended();\
 		::std::cerr << "successful_tests=" << **::assert::successful_tests_count << ::std::endl;\
 		::std::cerr << "failed_tests=" << **::assert::failed_tests_count<< std::endl;\
@@ -104,13 +96,9 @@ namespace assert {
 	extern parallel::atomic<unsigned> successful_tests_count;
 	extern parallel::atomic<unsigned> failed_tests_count;
 
-	constexpr unsigned number_of_threads = 2;
+	extern parallel::execution_queue test_execution_queue;
 
-	struct test_case {
-		std::function<void(void)> execute;
-		unsigned row_in_terminal;
-		std::string description;
-	};
+	typedef std::function<void(void)> test_case;
 
 	class assert_failed : public std::exception {
 		private:
@@ -121,22 +109,13 @@ namespace assert {
 			const char* what(void) const noexcept;
 	};
 
-	class test_suite_t : public std::list<test_case> {
-		private:
-			parallel::execution_queue running_test_cases;
-		public:
-			test_suite_t (unsigned number_of_threads);
-
-			void run_all_test_cases (void);
-			void wait_for_all_test_cases (void);
-
-	};
+	void queue_test_for_execution (const std::string &test_case_description, unsigned row_in_terminal, const test_case& test);
 
 	// dummy for checking test_suite scope
-	void assert_test_suite_scope(void);
+	void assert_test_case_block(void);
 
 	// dummy for checking begin_tests scope
-	void assert_tests_scope(void);
+	void assert_test_suite_block(void);
 
 }
 

@@ -20,6 +20,9 @@ unsigned assert::lines_written = 0;
 
 parallel::atomic<unsigned> assert::successful_tests_count(0);
 parallel::atomic<unsigned> assert::failed_tests_count(0);
+
+parallel::execution_queue assert::test_execution_queue(thread::hardware_concurrency());
+
 /*
 void segfault_signalled (int signal) {
 	auto elapsed_time = chrono::high_resolution_clock::now() - assert::test_case_start;
@@ -47,33 +50,22 @@ const char* assert_failed::what(void) const noexcept {
 	return this->message.c_str();
 }
 
-test_suite_t::test_suite_t (unsigned number_of_threads)
-	:	running_test_cases(number_of_threads)
-{}
+void assert::queue_test_for_execution (const string &test_case_description, unsigned row_in_terminal, const test_case& test) {
+	assert::test_execution_queue.push_back([=]() {
+		benchmark::Stopwatch stopwatch;
+		chrono::high_resolution_clock::duration test_duration;
 
-void test_suite_t::run_all_test_cases (void) {
-	for (auto &test : *this) {
-		this->running_test_cases.push_back([&test]() {
-
-			benchmark::Stopwatch stopwatch;
-			chrono::high_resolution_clock::duration test_duration;
-
-			assert::terminal->test_case_execution_begun(test.description, test.row_in_terminal);
-			try {
-				test.execute();
-				test_duration = stopwatch.totalTime();
-				(**assert::successful_tests_count)++;
-				assert::terminal->test_case_succeeded(test.description, test.row_in_terminal, test_duration);
-			} catch (const exception &e) {
-				test_duration = stopwatch.totalTime();
-				(**assert::failed_tests_count)++;
-				assert::terminal->test_case_failed(test.description, test.row_in_terminal, test_duration, e.what());
-			}
-		});
-	}
-}
-
-void test_suite_t::wait_for_all_test_cases (void) {
-	this->running_test_cases.join_unfinished_executions();
+		assert::terminal->test_case_execution_begun(test_case_description, row_in_terminal);
+		try {
+			test();
+			test_duration = stopwatch.totalTime();
+			(**assert::successful_tests_count)++;
+			assert::terminal->test_case_succeeded(test_case_description, row_in_terminal, test_duration);
+		} catch (const exception &e) {
+			test_duration = stopwatch.totalTime();
+			(**assert::failed_tests_count)++;
+			assert::terminal->test_case_failed(test_case_description, row_in_terminal, test_duration, e.what());
+		}
+	});
 }
 

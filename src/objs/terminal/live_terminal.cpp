@@ -13,21 +13,22 @@ live_terminal::live_terminal (void)
 {}
 
 unsigned live_terminal::tests_begun (void) {
-	**this->out_stream << hide_cursor;
+	auto terminal = *this->out_stream;
+	*terminal << save_cursor_position << hide_cursor;
 	return 0;
 }
 
 unsigned live_terminal::test_suite_block_begun (const string& test_suite_description) {
 	auto terminal = *this->out_stream;
+	*terminal
+		<< restore_cursor_position << cursor_down(this->depth_map.size())
+			<< ident(this->current_depth)
+			<< test_suite_description << ':'
+		<< '\n';
+
 	this->depth_map.push_back(this->current_depth);
 
 	*terminal
-		<< ident(this->current_depth)
-
-		<< test_suite_description << ':'
-
-		<< '\n'
-
 		<< cursor_up(this->depth_map.size()) << save_cursor_position
 		<< cursor_down(this->depth_map.size());
 
@@ -37,19 +38,20 @@ unsigned live_terminal::test_suite_block_begun (const string& test_suite_descrip
 
 unsigned live_terminal::test_case_discovered (const string& test_case_description) {
 	auto terminal = *this->out_stream;
+	*terminal
+		<< restore_cursor_position << cursor_down(this->depth_map.size())
+			<< ident(this->current_depth)
+
+			<< style<font::FAINT>
+				<< icon::CIRCLE << "  "
+
+				<< test_case_description
+			<< style<RESET_STYLE>
+		<< '\n';
+
 	this->depth_map.push_back(this->current_depth);
 
 	*terminal
-		<< ident(this->current_depth)
-
-		<< style<font::FAINT>
-			<< icon::CIRCLE << "  "
-
-			<< test_case_description
-		<< style<RESET_STYLE>
-
-		<< '\n'
-
 		<< cursor_up(this->depth_map.size()) << save_cursor_position
 		<< cursor_down(this->depth_map.size());
 
@@ -65,17 +67,15 @@ void live_terminal::test_case_execution_begun (const std::string& test_case_desc
 	auto terminal = *this->out_stream;
 	*terminal
 		<< restore_cursor_position << cursor_down(row) << clear_line
+			<< ident(this->depth_map[row])
 
-		<< ident(this->depth_map[row])
+			<< style<font::FAINT>
+				<< style<font::BLINK>
+					<< icon::CIRCLE << "  "
+				<< style<RESET_STYLE> << style<font::FAINT>
 
-		<< style<font::FAINT>
-			<< style<font::BLINK>
-				<< icon::CIRCLE << "  "
-			<< style<RESET_STYLE> << style<font::FAINT>
-
-			<< test_case_description
-		<< style<RESET_STYLE>
-
+				<< test_case_description
+			<< style<RESET_STYLE>
 		<< '\n';
 }
 
@@ -83,14 +83,12 @@ void live_terminal::test_case_failed (const std::string& test_case_description, 
 	auto terminal = *this->out_stream;
 	*terminal
 		<< restore_cursor_position << cursor_down(row) << clear_line
-
 			<< ident(this->depth_map[row])
 
 			<< style<bright<color::RED>()>
 				<< icon::CIRCLE << "  " << test_case_description
 				<< " (" << test_duration << ")"
 				<< ": " << reason
-
 		<< '\n';
 }
 
@@ -98,13 +96,11 @@ void live_terminal::test_case_succeeded (const string& test_case_description, un
 	auto terminal = *this->out_stream;
 	*terminal
 		<< restore_cursor_position	<< cursor_down(row) << clear_line
-
 			<< ident(this->depth_map[row])
 
 			<< style< bright<color::GREEN>() >
 				<< icon::CIRCLE << "  " << test_case_description
 				<< " (" << test_duration << ")"
-
 		<< '\n';
 }
 
