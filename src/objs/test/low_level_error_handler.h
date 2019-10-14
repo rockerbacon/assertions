@@ -2,8 +2,9 @@
 
 #include <benchmark/stopwatch.h>
 #include <thread>
+#include <csetjmp>
 
 namespace test {
-	void setup_signal_handlers (const std::string* test_case_description, const unsigned* row_in_terminal, const benchmark::Stopwatch* stopwatch);
+	void setup_signal_handlers (std::string* error_message, jmp_buf* jump_buffer);
 }
 

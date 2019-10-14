@@ -75,9 +75,6 @@ do
 				FAILED_TESTS_THIS_RUN=$(echo "$TEST_STDERR_OUTPUT" | grep -oe "\"failed_tests\":[0-9]*" | sed "s/\"failed_tests\"://")
 				TOTAL_SUCCESSFUL_TESTS=`expr $SUCCESSFUL_TESTS_THIS_RUN + $TOTAL_SUCCESSFUL_TESTS`
 				TOTAL_FAILED_TESTS=`expr $FAILED_TESTS_THIS_RUN + $TOTAL_FAILED_TESTS`
-				if [ $TEST_RETURN -gt 0 ]; then
-					TOTAL_FAILED_TESTS=`expr 1 + $TOTAL_FAILED_TESTS`
-				fi
 			else
 				echo "${red_color}Build failed${reset_color}"
 				echo "${BUILD_OUTPUT}"
