@@ -79,8 +79,8 @@ void live_terminal::test_case_failed (const std::string& test_case_description, 
 
 			<< style<bright<color::RED>()>
 				<< icon::CIRCLE << "  " << test_case_description
-				<< " (" << test_duration << ")"
 				<< ": " << reason
+				<< " (" << test_duration << ")"
 		<< '\n';
 }
 
