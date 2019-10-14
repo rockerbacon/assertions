@@ -53,7 +53,9 @@ void execution_queue::terminate (thread::id thread_id) {
 
 	auto thread_index = this->threads.find(thread_id);
 	if (thread_index != this->threads.end()) {
-#ifdef __linux__
+#ifdef _WIN32
+		// TODO non posix thread termination
+#else
 		pthread_cancel(thread_index->second.native_handle);
 #endif
 		if (thread_index->second.is_running) {
