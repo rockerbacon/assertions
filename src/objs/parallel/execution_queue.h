@@ -11,6 +11,7 @@ namespace parallel {
 
 	class execution_queue {
 		private:
+			std::unordered_map<std::thread::id, std::thread::native_handle_type> threads;
 			std::mutex mutex;
 			std::condition_variable notifier;
 			const unsigned max_queue_size;
@@ -21,6 +22,8 @@ namespace parallel {
 
 			void push_back(const std::function<void(void)>& execution);
 			void join_unfinished_executions (void);
+
+			void terminate (std::thread::id thread_id);
 	};
 
 }

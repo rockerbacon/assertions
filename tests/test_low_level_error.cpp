@@ -1,14 +1,26 @@
-#include "assertions/assert.h"
+#include <test/assert.h>
+#include <thread>
+#include <chrono>
 
-int main (void) {
+using namespace std;
+using namespace chrono;
+begin_tests {
 
 	test_suite("segmentation fault") {
-		test_case("raises low level error") {
+		test_case ("do something before low level error executes") {
+			assert_true(true);
+		};
+
+		test_case("raises low level error after 2s") {
 			int* x = NULL;
+			this_thread::sleep_for(2s);
 			*x = 2;
 			assert(*x, ==, 2);
 		};
+
+		test_case("continue execution normally (3s)") {
+			std::this_thread::sleep_for(3s);
+		};
 	}
 
-	return 0;
-}
+} end_tests;

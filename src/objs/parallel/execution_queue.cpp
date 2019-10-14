@@ -11,7 +11,7 @@ execution_queue::execution_queue (unsigned queue_size)
 
 void execution_queue::push_back(const std::function<void(void)>& execution) {
 	this->queued_executions++;
-	thread([this, execution]() {
+	thread queued_thread(([this, execution]() {
 		{
 			unique_lock<std::mutex> lock(this->mutex);
 
@@ -30,7 +30,10 @@ void execution_queue::push_back(const std::function<void(void)>& execution) {
 			this->available_threads++;
 			this->notifier.notify_one();
 		}
-	}).detach();
+	}));
+
+	this->threads.emplace(queued_thread.get_id(), queued_thread.native_handle());
+	queued_thread.detach();
 }
 
 void execution_queue::join_unfinished_executions (void) {
@@ -40,5 +43,14 @@ void execution_queue::join_unfinished_executions (void) {
 		return this->available_threads == this->max_queue_size && this->queued_executions == 0;
 	});
 
+}
+
+void execution_queue::terminate (thread::id thread_id) {
+	auto thread_index = this->threads.find(thread_id);
+	if (thread_index != this->threads.end()) {
+		pthread_cancel(thread_index->second);
+		this->threads.erase(thread_id);
+	}
+	this->available_threads++;
 }
 
