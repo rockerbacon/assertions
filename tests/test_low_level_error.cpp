@@ -18,7 +18,7 @@ begin_tests {
 			assert(*x, ==, 2);
 		};
 
-		test_case("continue execution normally (3s)") {
+		test_case("continue execution normally") {
 			std::this_thread::sleep_for(3s);
 		};
 	}
