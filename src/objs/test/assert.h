@@ -69,7 +69,7 @@
 
 #define assert(actual_value, comparison_operator, expected_value)\
 	if (!((actual_value) comparison_operator (expected_value))) {\
-		stringstream error_message;\
+		::std::stringstream error_message;\
 		error_message << ASSERT_FAIL_MESSAGE(actual_value, #comparison_operator, expected_value);\
 		throw ::test::assert_failed(error_message.str());\
 	}

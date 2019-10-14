@@ -1,6 +1,6 @@
-#include "assertions/assert.h"
+#include <test/assert.h>
 
-int main (void) {
+begin_tests {
 
 	test_suite("assert macros") {
 		test_case("assert true succesfully") {
@@ -48,4 +48,4 @@ int main (void) {
 		};
 	}
 
-}
+} end_tests;
