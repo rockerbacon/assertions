@@ -52,8 +52,8 @@
 	goto ASSERT_GENERATE_LABEL(ASSERT_LABEL_BEGIN_TEST_CASE_BLOCK);\
 	while(true)\
 		if (true) {\
-			::assert::queue_test_for_execution(test_case_description, ::assert::lines_written, assert_test_case_block);\
 			::assert::lines_written += ::assert::terminal->test_case_discovered(test_case_description);\
+			::assert::queue_test_for_execution(test_case_description, ::assert::lines_written-1, assert_test_case_block);\
 			break;\
 		} else\
 			ASSERT_GENERATE_LABEL(ASSERT_LABEL_BEGIN_TEST_CASE_BLOCK):\
