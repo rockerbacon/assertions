@@ -70,8 +70,8 @@ do
 				echo "Build finished successfully"
 
 				TEST_STDERR_OUTPUT=$($TEST_BINARY_FILE 2>&1 1>&3)	# stderr is captured, stdout is left alone
-				SUCCESSFUL_TESTS_THIS_RUN=$(echo "$TEST_STDERR_OUTPUT" | grep "successful_tests=" | sed "s/successful_tests=//")
-				FAILED_TESTS_THIS_RUN=$(echo "$TEST_STDERR_OUTPUT" | grep "failed_tests=" | sed "s/failed_tests=//")
+				SUCCESSFUL_TESTS_THIS_RUN=$(echo "$TEST_STDERR_OUTPUT" | grep -oe "\"successful_tests\":[0-9]*" | sed "s/\"successful_tests\"://")
+				FAILED_TESTS_THIS_RUN=$(echo "$TEST_STDERR_OUTPUT" | grep -oe "\"failed_tests\":[0-9]*" | sed "s/\"failed_tests\"://")
 				TOTAL_SUCCESSFUL_TESTS=`expr $SUCCESSFUL_TESTS_THIS_RUN + $TOTAL_SUCCESSFUL_TESTS`
 				TOTAL_FAILED_TESTS=`expr $FAILED_TESTS_THIS_RUN + $TOTAL_FAILED_TESTS`
 			else

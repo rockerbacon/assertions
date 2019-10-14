@@ -1,9 +1,11 @@
-#include <terminal/live_terminal.h>
+#include <test/live_terminal.h>
 #include <terminal/manipulators.h>
 #include <iostream>
 #include <benchmark/stopwatch.h>
+#include <utils/warnings.h>
 
 using namespace std;
+using namespace test;
 using namespace terminal;
 
 live_terminal::live_terminal (void)
@@ -12,15 +14,12 @@ live_terminal::live_terminal (void)
 		depth_map()
 {}
 
-unsigned live_terminal::tests_begun (void) {
-	auto terminal = *this->out_stream;
-	*terminal << save_cursor_position << hide_cursor;
-	return 0;
+void live_terminal::tests_begun (void) {
+	this->out_stream << save_cursor_position << hide_cursor;
 }
 
-unsigned live_terminal::test_suite_block_begun (const string& test_suite_description) {
-	auto terminal = *this->out_stream;
-	*terminal
+void live_terminal::test_suite_block_begun (const string& test_suite_description) {
+	this->out_stream
 		<< restore_cursor_position << cursor_down(this->depth_map.size())
 			<< ident(this->current_depth)
 			<< test_suite_description << ':'
@@ -28,17 +27,15 @@ unsigned live_terminal::test_suite_block_begun (const string& test_suite_descrip
 
 	this->depth_map.push_back(this->current_depth);
 
-	*terminal
+	this->out_stream
 		<< cursor_up(this->depth_map.size()) << save_cursor_position
 		<< cursor_down(this->depth_map.size());
 
 	this->current_depth++;
-	return 1;
 }
 
-unsigned live_terminal::test_case_discovered (const string& test_case_description) {
-	auto terminal = *this->out_stream;
-	*terminal
+void live_terminal::test_case_discovered (const string& test_case_description) {
+	this->out_stream
 		<< restore_cursor_position << cursor_down(this->depth_map.size())
 			<< ident(this->current_depth)
 
@@ -51,21 +48,17 @@ unsigned live_terminal::test_case_discovered (const string& test_case_descriptio
 
 	this->depth_map.push_back(this->current_depth);
 
-	*terminal
+	this->out_stream
 		<< cursor_up(this->depth_map.size()) << save_cursor_position
 		<< cursor_down(this->depth_map.size());
-
-	return 1;
 }
 
-unsigned live_terminal::test_suite_block_ended (void) {
+void live_terminal::test_suite_block_ended (void) {
 	this->current_depth--;
-	return 0;
 }
 
 void live_terminal::test_case_execution_begun (const std::string& test_case_description, unsigned row) {
-	auto terminal = *this->out_stream;
-	*terminal
+	this->out_stream
 		<< restore_cursor_position << cursor_down(row) << clear_line
 			<< ident(this->depth_map[row])
 
@@ -80,8 +73,7 @@ void live_terminal::test_case_execution_begun (const std::string& test_case_desc
 }
 
 void live_terminal::test_case_failed (const std::string& test_case_description, unsigned row, chrono::high_resolution_clock::duration test_duration, const std::string& reason) {
-	auto terminal = *this->out_stream;
-	*terminal
+	this->out_stream
 		<< restore_cursor_position << cursor_down(row) << clear_line
 			<< ident(this->depth_map[row])
 
@@ -93,8 +85,7 @@ void live_terminal::test_case_failed (const std::string& test_case_description, 
 }
 
 void live_terminal::test_case_succeeded (const string& test_case_description, unsigned row, chrono::high_resolution_clock::duration test_duration) {
-	auto terminal = *this->out_stream;
-	*terminal
+	this->out_stream
 		<< restore_cursor_position	<< cursor_down(row) << clear_line
 			<< ident(this->depth_map[row])
 
@@ -104,9 +95,8 @@ void live_terminal::test_case_succeeded (const string& test_case_description, un
 		<< '\n';
 }
 
-void live_terminal::tests_ended (void) {
-	auto terminal = *this->out_stream;
-	*terminal
+void live_terminal::tests_ended (NO_UNUSED_WARNING unsigned successful_tests, NO_UNUSED_WARNING unsigned failed_tests) {
+	this->out_stream
 		<< restore_cursor_position << cursor_down(this->depth_map.size())
 		<< style<RESET_STYLE>
 		<< show_cursor

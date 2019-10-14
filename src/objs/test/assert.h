@@ -5,20 +5,12 @@
 #include <list>
 #include <thread>
 #include <sstream>
-#include <terminal/terminal.h>
+#include <test/live_terminal.h>
+#include <test/json_logger.h>
 #include <parallel/atomic.h>
 #include <parallel/execution_queue.h>
+#include <utils/warnings.h>
 #include <iostream>
-
-#if __cplusplus >= 201703L
-	#define NO_UNUSED_WARNING [[maybe_unused]]
-#else
-	#ifdef __GNUC__
-		#define NO_UNUSED_WARNING __attribute__((unused))
-	#else
-		#define NO_UNUSED_WARNING
-	#endif
-#endif
 
 #define ASSERT_GENERATE_LABEL_PASTE_EXPAND(labelid, line) labelid ## _ ## line
 #define ASSERT_GENERATE_LABEL_PASTE(labelid, line) ASSERT_GENERATE_LABEL_PASTE_EXPAND(labelid, line)
@@ -26,18 +18,23 @@
 
 #define ASSERT_LABEL_NOT_DEFINED(label, error_message)\
 	{\
-		using namespace assert;\
-		static_assert(!::std::is_same<decltype(label), decltype(::assert::label)>(), error_message);\
+		using namespace test;\
+		static_assert(!::std::is_same<decltype(label), decltype(::test::label)>(), error_message);\
 	}
 
 #define test_suite(test_suite_description)\
 	ASSERT_LABEL_NOT_DEFINED(assert_test_suite_block, "cannot declare test_suite outside begin_tests");\
-	::assert::lines_written += ::assert::terminal->test_suite_block_begun(test_suite_description);\
+	for (auto& observer : ::test::observers) {\
+		(**observer)->test_suite_block_begun(test_suite_description);\
+	}\
+	::test::elements_discovered++;\
 	if(false) {\
-		ASSERT_GENERATE_LABEL(ASSERT_LABEL_END_TEST_SUITE_BLOCK):\
-			::assert::lines_written += ::assert::terminal->test_suite_block_ended();\
+		ASSERT_GENERATE_LABEL(ASSERT_LABEL_END_TEST_SUITE_BLOCK):;\
+			for (auto& observer : ::test::observers) {\
+				(**observer)->test_suite_block_ended();\
+			}\
 	} else\
-		for (::assert::test_case assert_test_case_block;;)\
+		for (::test::test_case assert_test_case_block;;)\
 			if (true)\
 				goto ASSERT_GENERATE_LABEL(ASSERT_LABEL_BEGIN_TEST_SUITE_BLOCK);\
 			else\
@@ -52,8 +49,11 @@
 	goto ASSERT_GENERATE_LABEL(ASSERT_LABEL_BEGIN_TEST_CASE_BLOCK);\
 	while(true)\
 		if (true) {\
-			::assert::lines_written += ::assert::terminal->test_case_discovered(test_case_description);\
-			::assert::queue_test_for_execution(test_case_description, ::assert::lines_written-1, assert_test_case_block);\
+			for (auto& observer : ::test::observers) {\
+				(**observer)->test_case_discovered(test_case_description);\
+			}\
+			::test::queue_test_for_execution(test_case_description, ::test::elements_discovered, assert_test_case_block);\
+			::test::elements_discovered++;\
 			break;\
 		} else\
 			ASSERT_GENERATE_LABEL(ASSERT_LABEL_BEGIN_TEST_CASE_BLOCK):\
@@ -64,34 +64,40 @@
 
 #define assert_true(condition)\
    	if (!(condition)) {\
-		throw ::assert::assert_failed("condition was false");\
+		throw ::test::assert_failed("condition was false");\
 	}
 
 #define assert(actual_value, comparison_operator, expected_value)\
 	if (!((actual_value) comparison_operator (expected_value))) {\
 		stringstream error_message;\
 		error_message << ASSERT_FAIL_MESSAGE(actual_value, #comparison_operator, expected_value);\
-		throw ::assert::assert_failed(error_message.str());\
+		throw ::test::assert_failed(error_message.str());\
 	}
 
 #define begin_tests\
 	int main (void) {\
 		NO_UNUSED_WARNING int assert_test_suite_block;\
-		::assert::lines_written += ::assert::terminal->tests_begun();\
+		::test::observers.emplace_back(new ::test::live_terminal);\
+		::test::observers.emplace_back(new ::test::json_logger(::std::cerr));\
+		for (auto& observer : ::test::observers) {\
+			(**observer)->tests_begun();\
+		}\
 
 #define end_tests\
-		::assert::test_execution_queue.join_unfinished_executions();\
-		::assert::terminal->tests_ended();\
-		::std::cerr << "successful_tests=" << **::assert::successful_tests_count << ::std::endl;\
-		::std::cerr << "failed_tests=" << **::assert::failed_tests_count<< std::endl;\
-		return **::assert::failed_tests_count;\
+		::test::test_execution_queue.join_unfinished_executions();\
+		for (auto& observer : ::test::observers) {\
+			auto observer_access = *observer;\
+			(*observer_access)->tests_ended(**::test::successful_tests_count, **::test::failed_tests_count);\
+			delete *observer_access;\
+		}\
+		return **::test::failed_tests_count;\
 	}
 
-namespace assert {
+namespace test {
 
-	extern std::unique_ptr<terminal::terminal_interface> terminal;
+	extern std::list<parallel::atomic<observer*>> observers;
 
-	extern unsigned lines_written;
+	extern unsigned elements_discovered;
 
 	extern parallel::atomic<unsigned> successful_tests_count;
 	extern parallel::atomic<unsigned> failed_tests_count;
