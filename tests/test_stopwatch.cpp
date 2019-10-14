@@ -1,32 +1,31 @@
-#include "assertions/assert.h"
-#include "assertions/stopwatch.h"
+#include <test/assert.h>
+#include <benchmark/stopwatch.h>
 
-using namespace assert;
 using namespace benchmark;
 
-int main (void) {
+begin_tests {
 
 	test_suite("stopwatch") {
 		test_case("stopwatch constructor raises no errors") {
 			Stopwatch stopwatch;
 		};
 
-		test_case("reseting stopwatch raises no errors") { 
+		test_case("reseting stopwatch raises no errors") {
 			Stopwatch stopwatch;
 			stopwatch.reset();
 		};
 
-		test_case("capturing formated total time returns non empty string") {
+		test_case("capturing total time returns value greater than 0") {
 			Stopwatch stopwatch;
-			std::string formatedTime = stopwatch.formatedTotalTime();
-			assert(formatedTime.length(), >, 0);
+			auto totalTime = stopwatch.totalTime();
+			assert(totalTime.count(), >, 0);
 		};
 
-		test_case("capturing formated lap time returns non empty string") {
+		test_case("capturing lap time returns value greater than 0") {
 			Stopwatch stopwatch;
-			std::string formatedTime = stopwatch.formatedLapTime();
-			assert(formatedTime.length(), >, 0);
+			auto lapTime = stopwatch.lapTime();
+			assert(lapTime.count(), >, 0);
 		};
 	}
 
-}
+} end_tests;
