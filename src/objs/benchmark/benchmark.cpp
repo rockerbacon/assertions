@@ -1,4 +1,4 @@
-#include "assertions/benchmark.h"
+#include <benchmark/benchmark.h>
 
 using namespace std;
 using namespace benchmark;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <sstream>
-#include "assertions/stopwatch.h"
+#include <benchmark/stopwatch.h>
 #include <list>
 #include <fstream>
 

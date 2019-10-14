@@ -1,4 +1,4 @@
-#include "assertions/observer.h"
+#include <benchmark/observer.h>
 #include <sstream>
 #include <iostream>
 #include <ctime>
@@ -85,7 +85,7 @@ TsvFileObserver::~TsvFileObserver (void) {
 
 void TsvFileObserver::notifyBenchmarkBegun(const string& benchmarkTitle, unsigned numberOfRuns) {
 	for (auto observable_variable : this->variables_to_observe) {
-		this->outputFile << observable_variable->get_label() << '\t';	
+		this->outputFile << observable_variable->get_label() << '\t';
 	}
 	this->outputFile << benchmarkTitle << '\t' << numberOfRuns << " runs";
 	this->outputFile << '\n';
@@ -97,7 +97,7 @@ void TsvFileObserver::notifyRunBegun(void) {
 
 void TsvFileObserver::notifyRunEnded(void) {
 	for (auto observable_variable : this->variables_to_observe) {
-		this->outputFile << observable_variable->get_value() << '\t';	
+		this->outputFile << observable_variable->get_value() << '\t';
 	}
 	this->outputFile << '\n';
 }

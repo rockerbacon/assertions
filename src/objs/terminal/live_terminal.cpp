@@ -1,7 +1,7 @@
 #include <terminal/live_terminal.h>
 #include <terminal/manipulators.h>
 #include <iostream>
-#include <assertions/stopwatch.h>
+#include <benchmark/stopwatch.h>
 
 using namespace std;
 using namespace terminal;

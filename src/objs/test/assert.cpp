@@ -1,10 +1,10 @@
-#include "assertions/assert.h"
+#include <test/assert.h>
 #include <iostream>
 #include <stdio.h>
 #include <signal.h>
 #include <string>
 #include <thread>
-#include <assertions/stopwatch.h>
+#include <benchmark/stopwatch.h>
 #include <terminal/live_terminal.h>
 
 #define SUCCESS_TEXT_STYLE ::terminal::stylize_color(::terminal::bright(::terminal::color_style::GREEN))

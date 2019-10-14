@@ -1,4 +1,4 @@
-#include <assertions/assert.h>
+#include <test/assert.h>
 
 begin_tests {
 
