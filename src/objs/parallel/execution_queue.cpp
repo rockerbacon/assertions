@@ -10,6 +10,8 @@ execution_queue::execution_queue (unsigned queue_size)
 {}
 
 void execution_queue::push_back(const std::function<void(void)>& execution) {
+	lock_guard<std::mutex> lock(this->mutex);
+
 	this->queued_executions++;
 	thread queued_thread(([this, execution]() {
 		{
@@ -21,6 +23,7 @@ void execution_queue::push_back(const std::function<void(void)>& execution) {
 
 			this->queued_executions--;
 			this->available_threads--;
+			this->threads[this_thread::get_id()].is_running = true;
 		}
 
 		execution();
@@ -32,7 +35,7 @@ void execution_queue::push_back(const std::function<void(void)>& execution) {
 		}
 	}));
 
-	this->threads.emplace(queued_thread.get_id(), queued_thread.native_handle());
+	this->threads.emplace(queued_thread.get_id(), executing_thread{ queued_thread.native_handle(), false });
 	queued_thread.detach();
 }
 
@@ -46,11 +49,18 @@ void execution_queue::join_unfinished_executions (void) {
 }
 
 void execution_queue::terminate (thread::id thread_id) {
+	lock_guard<std::mutex> lock(this->mutex);
+
 	auto thread_index = this->threads.find(thread_id);
 	if (thread_index != this->threads.end()) {
-		pthread_cancel(thread_index->second);
+#ifdef __linux__
+		pthread_cancel(thread_index->second.native_handle);
+#endif
+		if (thread_index->second.is_running) {
+			this->available_threads++;
+		}
 		this->threads.erase(thread_id);
 	}
-	this->available_threads++;
+
 }
 

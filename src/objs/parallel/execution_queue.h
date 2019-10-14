@@ -9,9 +9,14 @@
 
 namespace parallel {
 
+	struct executing_thread {
+		std::thread::native_handle_type native_handle;
+		bool is_running;
+	};
+
 	class execution_queue {
 		private:
-			std::unordered_map<std::thread::id, std::thread::native_handle_type> threads;
+			std::unordered_map<std::thread::id, executing_thread> threads;
 			std::mutex mutex;
 			std::condition_variable notifier;
 			const unsigned max_queue_size;
