@@ -10,11 +10,10 @@ execution_queue::execution_queue (unsigned queue_size)
 {}
 
 void execution_queue::push_back(const std::function<void(void)>& execution) {
+	this->queued_executions++;
 	thread([this, execution]() {
 		{
 			unique_lock<std::mutex> lock(this->mutex);
-
-			this->queued_executions++;
 
 			this->notifier.wait(lock, [this]() {
 				return this->available_threads > 0;
@@ -40,5 +39,6 @@ void execution_queue::join_unfinished_executions (void) {
 	this->notifier.wait(lock, [this]() {
 		return this->available_threads == this->max_queue_size && this->queued_executions == 0;
 	});
+
 }
 
