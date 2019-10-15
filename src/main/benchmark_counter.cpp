@@ -1,4 +1,4 @@
-#include "assertions/benchmark.h"
+#include <benchmark/benchmark.h>
 #include <thread>
 
 int main (void) {

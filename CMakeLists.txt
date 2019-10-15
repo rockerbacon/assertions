@@ -29,6 +29,10 @@ set(CMAKE_CXX_FLAGS "${compiler_flags}")
 
 include_directories(${objs_src_dir})
 
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY release/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY release/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY release/bin)
+
 file(GLOB_RECURSE objs_src_files "${objs_src_dir}/*.cpp")
 foreach(obj_src_file  ${objs_src_files})
 	string(REGEX REPLACE "(^(.*/)*${objs_src_dir}/(.*/)*)|(\.cpp)" "" obj_binary ${obj_src_file})
@@ -39,7 +43,12 @@ endforeach()
 file(GLOB_RECURSE tests_src_files "${tests_src_dir}/*.cpp")
 foreach(test_src_file ${tests_src_files})
 	string(REGEX REPLACE "(^(.*/)*${tests_src_dir}/)|(.cpp)" "" test_binary ${test_src_file})
+	string(REGEX REPLACE "/" "_" test_binary ${test_binary})
 	add_executable(${test_binary} ${test_src_file} ${all_obj_binaries})
+	set_target_properties(${test_binary}
+		PROPERTIES
+		RUNTIME_OUTPUT_DIRECTORY "tests"
+	)
 	target_link_libraries(${test_binary} ${external_libraries})
 	add_test(NAME ${test_binary} COMMAND ${test_binary})
 endforeach()
@@ -47,6 +56,7 @@ endforeach()
 file(GLOB programs_src_files "${programs_src_dir}/*.cpp")
 foreach(program_src_file ${programs_src_files})
 	string(REGEX REPLACE "(^(.*/)*${programs_src_dir}/)|(.cpp)" "" program_binary ${program_src_file})
+	string(REGEX REPLACE "/" "_" program_binary ${program_binary})
 	add_executable(${program_binary} ${program_src_file} ${all_obj_binaries})
 	target_link_libraries(${program_binary} ${external_libraries})
 endforeach()
