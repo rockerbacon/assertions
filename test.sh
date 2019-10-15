@@ -14,19 +14,20 @@ SCRIPT_DIR=$(realpath $(dirname $0))
 TESTS_DIR="$SCRIPT_DIR/tests"
 BUILD_DIR="$SCRIPT_DIR/build"
 
+ESCAPED_TESTS_DIR=$(echo $TESTS_DIR | sed 's/\//\\\//g; s/\./\\\./g')
+
 determine_current_test_full_name () {
-	ESCAPED_TESTS_DIR=$(echo $TESTS_DIR | sed 's/\//\\\//g; s/\./\\\./g')
-	ESCAPED_BUILD_DIR=$(echo $TEST_BUILD_DIR | sed 's/\//\\\//g; s/\./\\\./g')
-	TEST_NAME=$(echo $CURRENT_TEST | sed "s/^${ESCAPED_TESTS_DIR}\///; s/^${ESCAPED_BUILD_DIR}\///;" | sed "s/^test_//; s/.cpp$//")
-	TEST_FULL_NAME="test_${TEST_NAME}"
+	CURRENT_TEST=$(echo $CURRENT_TEST | sed "s/^${ESCAPED_TESTS_DIR}\///; s/.cpp$//")
 }
 
 determine_current_test_source_file () {
-	TEST_SOURCE_FILE="${TESTS_DIR}/${TEST_FULL_NAME}.cpp"
+	TEST_SOURCE_FILE="${TESTS_DIR}/${CURRENT_TEST}.cpp"
 }
 
 determine_current_test_binary_file () {
-	TEST_BINARY_FILE="${BUILD_DIR}/${TEST_FULL_NAME}"
+	TEST_BINARY_BUILD_RULE=$(echo $CURRENT_TEST | sed "s/\//_/g")
+	TEST_BINARY_BUILD_RULE="tests_${TEST_BINARY_BUILD_RULE}"
+	TEST_BINARY_FILE="${BUILD_DIR}/tests/${TEST_BINARY_BUILD_RULE}"
 }
 
 if [ "$#" -gt 0 ] && [ "$1" != "all" ]; then
@@ -62,8 +63,8 @@ do
 		determine_current_test_binary_file
 		if [ -f "$TEST_SOURCE_FILE" ]; then
 
-			echo "Building $TEST_FULL_NAME..."
-			BUILD_OUTPUT=$("$SCRIPT_DIR/build.sh" --no-cmake  $TEST_FULL_NAME 2>&1)
+			echo "Building $CURRENT_TEST..."
+			BUILD_OUTPUT=$("$SCRIPT_DIR/build.sh" --no-cmake  $TEST_BINARY_BUILD_RULE 2>&1)
 
 			BUILD_STATUS=$?
 			if [ $BUILD_STATUS -eq 0 ]; then

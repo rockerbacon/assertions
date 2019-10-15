@@ -8,7 +8,7 @@ begin_tests {
 
 	test_suite("segmentation fault") {
 		test_case ("do something before low level error executes") {
-			assert_true(true);
+			assert(true, ==, true);
 		};
 
 		test_case("raises low level error after 2s") {

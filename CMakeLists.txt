@@ -44,6 +44,7 @@ file(GLOB_RECURSE tests_src_files "${tests_src_dir}/*.cpp")
 foreach(test_src_file ${tests_src_files})
 	string(REGEX REPLACE "(^(.*/)*${tests_src_dir}/)|(.cpp)" "" test_binary ${test_src_file})
 	string(REGEX REPLACE "/" "_" test_binary ${test_binary})
+	string(PREPEND test_binary "tests_")
 	add_executable(${test_binary} ${test_src_file} ${all_obj_binaries})
 	set_target_properties(${test_binary}
 		PROPERTIES

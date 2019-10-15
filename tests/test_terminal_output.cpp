@@ -11,12 +11,12 @@ begin_tests {
 		};
 
 		test_case("finish immediately") {
-			assert_true(true);
+			assert(true, ==, true);
 		};
 
 		test_case("wait 4s then fail") {
 			this_thread::sleep_for(4s);
-			assert_true(false);
+			assert(true, ==, false);
 		};
 
 		test_case("wait 3512ms") {
@@ -31,7 +31,7 @@ begin_tests {
 
 		test_case("wait 2314ms then fail") {
 			this_thread::sleep_for(2314ms);
-			assert_true(false);
+			assert(true, ==, false);
 		};
 
 		test_case("wait 3s") {
