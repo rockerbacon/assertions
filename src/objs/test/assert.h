@@ -59,18 +59,11 @@
 			ASSERT_GENERATE_LABEL(ASSERT_LABEL_BEGIN_TEST_CASE_BLOCK):\
 				assert_test_case_block = []()
 
-#define ASSERT_FAIL_MESSAGE(actual_value, comprasion_operator_string, expected_value)\
-	"expected " << actual_value << " to be " << comprasion_operator_string << ' ' << expected_value
-
-#define assert_true(condition)\
-   	if (!(condition)) {\
-		throw ::test::assert_failed("condition was false");\
-	}
-
 #define assert(actual_value, comparison_operator, expected_value)\
+	::test::is_logic_operator([=]{ return #comparison_operator; });\
 	if (!((actual_value) comparison_operator (expected_value))) {\
 		::std::stringstream error_message;\
-		error_message << ASSERT_FAIL_MESSAGE(actual_value, #comparison_operator, expected_value);\
+		error_message << "expected " << #actual_value << ' ' << #comparison_operator << ' ' << #expected_value;\
 		throw ::test::assert_failed(error_message.str());\
 	}
 
@@ -114,6 +107,17 @@ namespace test {
 
 			const char* what(void) const noexcept;
 	};
+
+	template<typename ConstexprStringFunction>
+	constexpr void is_logic_operator(ConstexprStringFunction string_function) {
+		static_assert(
+			string_function()[0] == '=' ||
+			string_function()[0] == '!' ||
+			string_function()[0] == '<' ||
+			string_function()[0] == '>'
+			, "can only assert with logic operators"
+		);
+	}
 
 	void queue_test_for_execution (const std::string &test_case_description, unsigned row_in_terminal, const test_case& test);
 
