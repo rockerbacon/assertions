@@ -30,16 +30,24 @@ determine_current_test_binary_file () {
 	TEST_BINARY_FILE="${BUILD_DIR}/tests/${TEST_BINARY_BUILD_RULE}"
 }
 
+add_tests_from_folder () {
+	TESTS_IN_FOLDER="${CURRENT_TEST}/*"
+	for INNER_TEST in $TESTS_IN_FOLDER
+	do
+		TESTS+=("$INNER_TEST")
+	done
+}
+
 if [ "$#" -gt 0 ] && [ "$1" != "all" ]; then
-	TESTS=$1
+	TESTS=("${TESTS_DIR}/$1")
 	shift
 	until [ -z "$1" ]
 	do
-		TESTS="${TESTS} ${1}"
+		TESTS+=("${TESTS_DIR}/${1}")
 		shift
 	done
 else
-	TESTS="${TESTS_DIR}/*.cpp"
+	TESTS=("${TESTS_DIR}")
 fi
 
 TOTAL_FAILED_TESTS=0
@@ -52,13 +60,16 @@ exec 3>&1 # save stdout address
 
 echo	# line feed
 echo "-------------------INDIVIDUAL TESTS-------------------"
-for CURRENT_TEST in $TESTS
+until [ "${TESTS[0]}" == "" ]
 do
 
-	determine_current_test_full_name
-	if [ -d "${TESTS_DIR}/${CURRENT_TEST}" ]; then
-		echo "Executing tests from specific folder not yet supported"
+	CURRENT_TEST="${TESTS[0]}"
+	TESTS=("${TESTS[@]:1}")
+
+	if [ -d "${CURRENT_TEST}" ]; then
+		add_tests_from_folder
 	else
+		determine_current_test_full_name
 		determine_current_test_source_file
 		determine_current_test_binary_file
 		if [ -f "$TEST_SOURCE_FILE" ]; then
@@ -85,9 +96,8 @@ do
 			echo "${red_color}no source file ${TEST_SOURCE_FILE}${reset_color}"
 		fi
 
+		echo	# line feed
 	fi
-
-	echo	# line feed
 
 done
 echo "-------------------INDIVIDUAL TESTS-------------------"
