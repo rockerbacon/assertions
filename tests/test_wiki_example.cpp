@@ -43,14 +43,14 @@ begin_tests {
 	test_suite("test cases are independent") {
 		//int mutable_value = 0;
 
-		const int unchangable_value = 0;
+		const int unchangeable_value = 0;
 
 		test_case("won't even build, so I commented stuff out") {
 			//assert(mutable_value, ==, 0);
 		};
 
-		test_case("const preserves test case independence, but where was unchangable_value defined?") {
-			assert(unchangable_value, ==, 10);
+		test_case("const preserves test case independence, but where was unchangeable_value defined?") {
+			assert(unchangeable_value, ==, 10);
 		};
 
 		test_case("won't terminate the proccess") {
