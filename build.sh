@@ -47,5 +47,8 @@ elif [ "$ACTION" == "target" ]; then
 		determine_target_rule
 		make $TARGET_RULE
 	done
+else
+	echo "Error: unknown action $ACTION"
+	exit 1
 fi
 
