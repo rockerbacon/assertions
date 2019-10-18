@@ -80,6 +80,10 @@ determine_target_needs_rebuild
 
 if [ $TARGET_NEEDS_REBUILD ]; then
 	./build.sh target "$TARGET"
+	BUILD_STATUS=$?
+	if [ ! "$BUILD_STATUS" -eq 0 ]; then
+		exit 1
+	fi
 fi
 
 if [ "$TARGET_IS_TEST" ]; then
@@ -93,4 +97,7 @@ if [ "$TARGET_IS_TEST" ]; then
 else
 	"$TARGET_EXECUTABLE"
 fi
+
+TARGET_STATUS="$?"
+exit $TARGET_STATUS
 
