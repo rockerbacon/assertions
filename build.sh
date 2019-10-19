@@ -7,10 +7,28 @@ mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
 ######### Command Line Interface #########
+print_help () {
+	echo "Help:"
+	echo "Build targets to ./build/release or ./build/tests depending on whether the target is a test or not"
+	echo
+	echo "Usage: ./build.sh [COMMAND]"
+	echo "If no COMMAND is provided then all possible targets will be built"
+	echo
+	echo "COMMAND:"
+	echo "	target [LIST OF TARGETS]: build specific targets. Each target is a source file, with or without the .cpp prefix. Targets should be separated with spaces"
+	echo "	clean: delete all built binaries and auto-generated configurations (everything inside ./build)"
+	echo "	cmake: execute cmake to auto-generate configurations, but do not build anything"
+	echo "	compile-commands: execute cmake and link compile commands to the root of the project. Useful for integrating the project with certain external tools"
+}
+
 if [ "$#" -eq 0 ]; then
 	ACTION="all"
 else
 	ACTION="$1"
+	if [ "$ACTION" == "--help" ]; then
+		print_help
+		exit 0
+	fi
 	shift
 	until [ -z "$1" ]
 	do
@@ -24,6 +42,9 @@ if [ "$ACTION" == "clean" ]; then
 	rm -rf "$BUILD_DIR"
 elif [ "$ACTION" == "cmake" ]; then
 	cmake "$PROJECT_ROOT"
+elif [ "$ACTION" == "compile-commands" ]; then
+	cmake "$PROJECT_ROOT"
+	ln -s "$BUILD_DIR/compile_commands.json" "$PROJECT_ROOT/compile_commands.json"
 elif [ "$ACTION" == "all" ]; then
 	if [ ! -f "$BUILD_DIR/Makefile" ]; then
 		cmake "$PROJECT_ROOT"
@@ -43,6 +64,8 @@ elif [ "$ACTION" == "target" ]; then
 	done
 else
 	echo "Error: unknown action $ACTION"
+	echo
+	print_help
 	exit 1
 fi
 

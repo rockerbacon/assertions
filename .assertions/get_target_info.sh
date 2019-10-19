@@ -1,6 +1,18 @@
 #!/bin/bash
 
 if [ "$TARGET" != "$CURRENT_TARGET" ]; then
+	print_target_help () {
+		echo "Help:"
+		echo "A target is any file inside ./src/main or ./tests"
+		echo
+		echo " - Files don't need to be suffixed with .cpp"
+	   	echo "	Eg: src/main/main or tests/some_test"
+		echo " - Files inside ./src/main never need the folder prefix"
+	   	echo "	Eg: main.cpp"
+		echo " - Files inside ./tests don't need the folder prefix when using test.sh but do need the prefix when using build.sh"
+		echo "	Eg: './build.sh target tests/some_test' or './test.sh some_test'"
+	}
+
 	TESTS_SRC_DIR="$PROJECT_ROOT/tests"
 	MAIN_SRC_DIR="$PROJECT_ROOT/src/main"
 	BUILD_DIR="$PROJECT_ROOT/build"
@@ -30,6 +42,10 @@ if [ "$TARGET" != "$CURRENT_TARGET" ]; then
 		fi
 		if [ ! -f "$TARGET_SOURCE_PATH" ]; then
 			echo "Error: no target '${TARGET}'"
+			echo
+			print_target_help
+			echo
+			exit 1
 		fi
 	}
 
