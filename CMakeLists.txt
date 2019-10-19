@@ -54,7 +54,7 @@ foreach(test_src_file ${tests_src_files})
 	add_test(NAME ${test_binary} COMMAND ${test_binary})
 endforeach()
 
-file(GLOB programs_src_files "${programs_src_dir}/*.cpp")
+file(GLOB_RECURSE programs_src_files "${programs_src_dir}/*.cpp")
 foreach(program_src_file ${programs_src_files})
 	string(REGEX REPLACE "(^(.*/)*${programs_src_dir}/)|(.cpp)" "" program_binary ${program_src_file})
 	string(REGEX REPLACE "/" "_" program_binary ${program_binary})
