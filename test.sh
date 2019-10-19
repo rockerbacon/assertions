@@ -11,7 +11,22 @@ up_line=`tput cuu 1`
 clear_line=`tput el 1`
 
 ############## Command Line Interface ################
-if [ "$#" -gt 0 ] && [ "$1" != "all" ]; then
+print_help () {
+	echo "Help:"
+	echo "Execute tests and give a summary of the test results"
+	echo
+	echo "Usage: ./test.sh [LIST OF TESTS]"
+	echo " - If no test is specified then all tests will be executed"
+	echo " - Tests must be space separated"
+	echo " - A test is any source file (with or without the .cpp suffix) or folder inside ./tests. The folder suffix 'tests/' is optional. Eg:"
+	echo "	* './test.sh some_test.cpp' will execute the tests defined inside ./tests/some_test.cpp"
+	echo "	* './test.sh many_tests' will recursively execute all tests inside the folder ./tests/many_tests/"
+}
+
+if [ "$1" == "--help" ]; then
+	print_help
+	exit 0
+elif [ "$#" -gt 0 ] && [ "$1" != "all" ]; then
 	TESTS=("$1")
 	shift
 	until [ -z "$1" ]
