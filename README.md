@@ -5,3 +5,7 @@ To assert means "to put into action boldly; employ or demonstrate". Assertions w
 Assertions does not aim to be just a framework, but a __practical__ case study on good development practices and on what development tools can do to guide developers towards those practices. Because of that it's important to differentiate Assertions from the Assertions C++ Framework, the first in a set of ideas while the second is an implementation of those ideas.
 
 All documentation on the ideas behind Assertions are available in [THE WIKI](https://github.com/rockerbacon/assertions/wiki).
+
+## Projects Applying Assertions
+
+Currently, only the C++ Framework in this project makes use of Assertions' ideas.
