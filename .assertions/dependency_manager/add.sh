@@ -32,14 +32,21 @@ else
 fi
 ################ Command Line Interface ##################
 
+rollback_installation () {
+	if [ -d "$DEPENDENCY_GIT_CLONE_DIR/.git" ]; then
+		echo "Rolling back: deleting '$DEPENDENCY_GIT_CLONE_DIR'"
+		rm -rf "$DEPENDENCY_GIT_CLONE_DIR"
+	fi
+}
+
 if [ "$DEPENDENCY_TYPE" == "git" ]; then
 
-	GIT_DIR="$DEPENDENCIES_DIR/git"
-	mkdir -p "$GIT_DIR"
-	cd "$GIT_DIR"
+	DEPENDENCIES_GIT_DIR="$DEPENDENCIES_DIR/git"
+	mkdir -p "$DEPENDENCIES_GIT_DIR"
+	cd "$DEPENDENCIES_GIT_DIR"
 
 	DEPENDENCY_RELATIVE_GIT_CLONE_DIR=$(echo "$DEPENDENCY_GIT_URL" | grep -oe "\/.*\.git" | sed 's/\///; s/\.git$//')
-	DEPENDENCY_GIT_CLONE_DIR="$DEPENDENCIES_DIR/$DEPENDENCY_RELATIVE_GIT_CLONE_DIR"
+	DEPENDENCY_GIT_CLONE_DIR="$DEPENDENCIES_GIT_DIR/$DEPENDENCY_RELATIVE_GIT_CLONE_DIR"
 
 	git clone "$DEPENDENCY_GIT_URL"
 	GIT_EXECUTION_STATUS=$?
@@ -56,11 +63,13 @@ if [ "$DEPENDENCY_TYPE" == "git" ]; then
 		if [ "$DEPENDENCY_LANGUAGE" == "cpp" ]; then
 			echo
 			echo "Error: dependency management is still WIP"
+			rollback_installation
 			exit 1
 		fi
 	else
 		echo
 		echo "Error: dependencies can only be from projects using the Assertions C++ Framework, for now. Support for other projects is still WIP"
+		rollback_installation
 		exit 1
 	fi
 
