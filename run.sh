@@ -21,7 +21,7 @@ done
 ############ Command Line Interface ###############
 
 export TARGET=$TARGET
-source "${PROJECT_ROOT}/.export_target_info.sh"
+source "${PROJECT_ROOT}/.assertions/get_target_info.sh"
 
 ./build.sh target "$TARGET"
 BUILD_STATUS=$?

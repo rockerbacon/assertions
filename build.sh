@@ -36,7 +36,7 @@ elif [ "$ACTION" == "target" ]; then
 	for TARGET in "${TARGETS[@]}"
 	do
 		export TARGET=$TARGET
-		source "$PROJECT_ROOT/.export_target_info.sh"
+		source "$PROJECT_ROOT/.assertions/get_target_info.sh"
 		if [ $TARGET_BUILD_IS_OUTDATED ]; then
 			make $TARGET_RULE
 		fi
