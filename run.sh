@@ -4,7 +4,8 @@ export PROJECT_ROOT=$(realpath $(dirname $0))
 
 ############# Command Line Interface ###############
 print_help () {
-	echo "Automatically build (if necessary) and execute a target"
+	echo "Help:"
+	echo "Automatically build a target (if necessary) and execute it"
 	echo
 	echo "Usage: ./run.sh TARGET [OPTIONS]"
 	echo

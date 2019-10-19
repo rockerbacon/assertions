@@ -30,6 +30,9 @@ if [ "$TARGET" != "$CURRENT_TARGET" ]; then
 		fi
 		if [ ! -f "$TARGET_SOURCE_PATH" ]; then
 			echo "Error: no target '${TARGET}'"
+			echo
+			print_help
+			exit 1
 		fi
 	}
 
