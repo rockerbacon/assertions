@@ -32,45 +32,18 @@ else
 fi
 ################ Command Line Interface ##################
 
-rollback_installation () {
-	if [ -d "$DEPENDENCY_GIT_CLONE_DIR/.git" ]; then
-		echo "Rolling back: deleting '$DEPENDENCY_GIT_CLONE_DIR'"
-		rm -rf "$DEPENDENCY_GIT_CLONE_DIR"
-	fi
-}
-
 if [ "$DEPENDENCY_TYPE" == "git" ]; then
-
-	DEPENDENCIES_GIT_DIR="$DEPENDENCIES_DIR/git"
-	mkdir -p "$DEPENDENCIES_GIT_DIR"
-	cd "$DEPENDENCIES_GIT_DIR"
-
-	DEPENDENCY_RELATIVE_GIT_CLONE_DIR=$(echo "$DEPENDENCY_GIT_URL" | grep -oe "\/.*\.git" | sed 's/\///; s/\.git$//')
-	DEPENDENCY_GIT_CLONE_DIR="$DEPENDENCIES_GIT_DIR/$DEPENDENCY_RELATIVE_GIT_CLONE_DIR"
-
-	git clone "$DEPENDENCY_GIT_URL"
-	GIT_EXECUTION_STATUS=$?
-
-	#echo $CLONE_OUTPUT
-	if [ "$GIT_EXECUTION_STATUS" != "0" ]; then
-		echo
-		print_add_help
-		exit 1
+	if [ -f "$PROJECT_ROOT/.assertions/dependency_manager/install_all.sh" ]; then
+		DEPENDENCY_ALREADY_EXISTS=$(cat "$PROJECT_ROOT/.assertions/dependency_manager/install_all.sh" | grep -o "${DEPENDENCY_GIT_URL}")
 	fi
-
-	if [ -f "$DEPENDENCY_GIT_CLONE_DIR/.assertions/language" ]; then
-		DEPENDENCY_LANGUAGE=$(cat "$DEPENDENCY_GIT_CLONE_DIR/.assertions/language")
-		if [ "$DEPENDENCY_LANGUAGE" == "cpp" ]; then
-			echo
-			echo "Error: dependency management is still WIP"
-			rollback_installation
-			exit 1
-		fi
+	if [ "$DEPENDENCY_ALREADY_EXISTS" == "" ]; then
+		echo "./.assertions/dependency_manager/install_from_git.sh ${DEPENDENCY_GIT_URL}" >> "./.assertions/dependency_manager/install_all.sh"
 	else
-		echo
-		echo "Error: dependencies can only be from projects using the Assertions C++ Framework, for now. Support for other projects is still WIP"
-		rollback_installation
+		echo "Error: dependency already added"
 		exit 1
 	fi
-
 fi
+
+cd "$PROJECT_ROOT"
+bash "$PROJECT_ROOT/.assertions/dependency_manager/install_all.sh"
+
