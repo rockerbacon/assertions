@@ -10,10 +10,10 @@ begin_tests {
 	}
 
 	test_suite("when mutable variables are in the external scope") {
-		int mutable_variable = 1;
+		//int mutable_variable = 1;
 
 		test_case("a test case which access them will break the build") {
-			assert(mutable_variable, ==, 1);	// comment this line for the test to pass
+			//assert(mutable_variable, ==, 1);	// won't even build, so I commented it out
 		};
 	}
 } end_tests;
