@@ -4,3 +4,4 @@
 compile_commands.json
 *.swo
 /external_dependencies
+*.bak

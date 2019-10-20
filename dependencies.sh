@@ -27,14 +27,17 @@ if [ "$1" == "--help" ]; then
 elif [ "$1" == "add" ]; then
 	shift
 	source "$PROJECT_ROOT/.assertions/dependency_manager/add.sh"
+elif [ "$1" == "remove" ]; then
+	shift
+	source "$PROJECT_ROOT/.assertions/dependency_manager/remove.sh"
 elif [ "$1" == "clean" ]; then
 	echo "Are you sure you want to delete all downloaded dependencies? (y/n)"
 	read CONFIRMATION
 	if [ "${CONFIRMATION[0]}" == "y" ] || [ "${CONFIRMATION[1]}" == "Y" ]; then
 		rm -rf "$PROJECT_ROOT/external_dependencies"
-		echo "Downloaded dependencies deleted"
+		echo "Info: Downloaded dependencies deleted"
 	else
-		echo "Operation cancelled"
+		echo "Info: Operation cancelled"
 	fi
 else
 	echo "Error: unknown action"

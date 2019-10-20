@@ -21,7 +21,12 @@ print_add_help () {
 }
 
 check_dependency_type_is_valid () {
-	if [ ! -d "$DEPENDENCY_TYPE_MODULE_DIR" ]; then
+	if [ "$DEPENDENCY_TYPE" == "" ]; then
+		echo "Error: unspecified dependency type"
+		echo
+		print_add_help
+		exit 1
+	elif [ ! -d "$DEPENDENCY_TYPE_MODULE_DIR" ]; then
 		echo "Error: unknown dependency type '$DEPENDENCY_TYPE'"
 		echo
 		print_add_help
@@ -65,8 +70,8 @@ fi
 
 DEPENDENCY_UNIVERSAL_INSTALL_COMMAND="$DEPENDENCY_TYPE/install.sh $DEPENDENCY_FROZEN_INSTALL_ARGUMENTS"
 
-if [ -f "$DEPENDENCY_MANAGER_DIR/install_all.sh" ]; then
-	DEPENDENCY_ALREADY_EXISTS=$(cat "$DEPENDENCY_MANAGER_DIR/install_all.sh" | grep -o "$DEPENDENCY_UNIVERSAL_INSTALL_COMMAND")
+if [ -f "$DEPENDENCY_MANAGER_DIR/install.sh" ]; then
+	DEPENDENCY_ALREADY_EXISTS=$(cat "$DEPENDENCY_MANAGER_DIR/install.sh" | grep -o "$DEPENDENCY_UNIVERSAL_INSTALL_COMMAND")
 	if  [ "$DEPENDENCY_ALREADY_EXISTS" != "" ]; then
 		echo "Error: dependency already in dependencies list"
 		exit 1
