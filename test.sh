@@ -75,7 +75,7 @@ do
 			TOTAL_FAILED_TESTS_THIS_RUN=$(grep -oe 'test_case( )*\(' "$TEST_SOURCE_PATH" | wc -l)
 			TOTAL_FAILED_TESTS=`expr $TOTAL_FAILED_TESTS_THIS_RUN + $TOTAL_FAILED_TESTS`
 		else
-			TEST_STDERR_OUTPUT=$(./run.sh "$CURRENT_TEST" --full-output 2>&1 1>&3)
+			TEST_STDERR_OUTPUT=$(./run.sh --full-output "$CURRENT_TEST" 2>&1 1>&3)
 			FAILED_TESTS_THIS_RUN=$?
 			determine_successful_tests_this_run
 			TOTAL_SUCCESSFUL_TESTS=`expr $SUCCESSFUL_TESTS_THIS_RUN + $TOTAL_SUCCESSFUL_TESTS`
@@ -90,12 +90,12 @@ echo "-------------------TESTS SUMMARY-------------------"
 if [ $TOTAL_SUCCESSFUL_TESTS -gt 0 ]; then
 	echo "${green_color}$TOTAL_SUCCESSFUL_TESTS tests passed${reset_color}"
 else
-	echo "$TOTAL_SUCCESSFUL_TESTS tests passed${reset_color}"
+	echo "$TOTAL_SUCCESSFUL_TESTS tests passed"
 fi
 if [ $TOTAL_FAILED_TESTS -gt 0 ]; then
 	echo "${red_color}$TOTAL_FAILED_TESTS tests failed${reset_color}"
 else
-	echo "$TOTAL_FAILED_TESTS tests failed${reset_color}"
+	echo "$TOTAL_FAILED_TESTS tests failed"
 fi
 echo "-------------------TESTS SUMMARY-------------------"
 
