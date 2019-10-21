@@ -90,8 +90,6 @@ echo "Info: local removal successful, unlisting dependency from '$DEPENDENCY_MAN
 DEPENDENCY_LISTING_MATCH="$DEPENDENCY_TYPE/install.sh $@"
 grep -v "$DEPENDENCY_LISTING_MATCH" "$DEPENDENCY_MANAGER_DIR/install.sh" > "$DEPENDENCY_MANAGER_DIR/install.sh.swp" || true
 
-cat "$DEPENDENCY_MANAGER_DIR/install.sh.swp"
-
 mv "$DEPENDENCY_MANAGER_DIR/install.sh" "$DEPENDENCY_MANAGER_DIR/install.sh.bak"
 mv "$DEPENDENCY_MANAGER_DIR/install.sh.swp" "$DEPENDENCY_MANAGER_DIR/install.sh"
 

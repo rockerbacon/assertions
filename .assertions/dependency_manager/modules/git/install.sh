@@ -36,7 +36,7 @@ rollback_installation () {
 }
 
 if [ -d "$DEPENDENCY_REPOSITORY_DIR" ]; then
-	echo "Info: Dependency '$DEPENDENCY_REPOSITORY_DIR' already cloned"
+	echo "Info: Dependency '$DEPENDENCY_REPOSITORY_DIR' already cloned" 1>&2
 else
 	cd "$REPOSITORIES_DIR"
 	git clone "$GIT_URL"
@@ -57,8 +57,7 @@ if [ "$GIT_COMMIT" != "" ]; then
 	fi
 else
 	LASTEST_COMMIT=$(git log | grep -m 1 "^commit" | sed "s/commit //")
-	echo
-	echo "Info: git commit not specified, using latest ($LASTEST_COMMIT)"
+	echo "Info: git commit not specified, using latest ($LASTEST_COMMIT)" 1>&2
 	GIT_COMMIT=$LASTEST_COMMIT
 fi
 
@@ -66,7 +65,7 @@ if [ -f "$DEPENDENCY_REPOSITORY_DIR/.assertions/language" ]; then
 	DEPENDENCY_LANGUAGE=$(cat "$DEPENDENCY_REPOSITORY_DIR/.assertions/language")
 	if [ "$DEPENDENCY_LANGUAGE" == "cpp" ]; then
 		if [ -d "$DEPENDENCY_REPOSITORY_DIR/build" ]; then
-			echo "Info: dependency '$GIT_URL' already built"
+			echo "Info: dependency '$GIT_URL' already built" 1>&2
 		else
 			"$DEPENDENCY_REPOSITORY_DIR/build.sh"
 			if [ ! -d "$DEPENDENCY_REPOSITORY_DIR/build/release/lib" ]; then
@@ -74,19 +73,16 @@ if [ -f "$DEPENDENCY_REPOSITORY_DIR/.assertions/language" ]; then
 				rollback_installation
 				exit 1
 			fi
+			ln -s "$DEPENDENCY_REPOSITORY_DIR/build/release/lib" "$DEPENDENCIES_LIB_DIR/$RELATIVE_DEPENDENCY_REPOSITORY_DIR"
+			ln -s "$DEPENDENCY_REPOSITORY_DIR/build/release/include" "$DEPENDENCIES_INCLUDE_DIR/$RELATIVE_DEPENDENCY_REPOSITORY_DIR"
 		fi
-		ln -s "$DEPENDENCY_REPOSITORY_DIR/build/release/lib" "$DEPENDENCIES_LIB_DIR/$RELATIVE_DEPENDENCY_REPOSITORY_DIR"
-		ln -s "$DEPENDENCY_REPOSITORY_DIR/build/release/include" "$DEPENDENCIES_INCLUDE_DIR/$RELATIVE_DEPENDENCY_REPOSITORY_DIR"
 	else
-		echo
 		echo "Error: project uses Assertions, but it's not meant for this languague. Expected language: 'cpp', language reported by dependency: '${DEPENDENCY_LANGUAGE}'"
 		rollback_installation
 		exit 1
 	fi
-	echo
-	echo "Info: dependency configured: $GIT_URL $GIT_COMMIT"
+	echo "Info: dependency configured: $GIT_URL $GIT_COMMIT" 1>&2
 else
-	echo
 	echo "Error: dependencies can only be from projects using the Assertions C++ Framework"
 	rollback_installation
 	exit 1
