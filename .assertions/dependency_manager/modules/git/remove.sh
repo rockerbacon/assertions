@@ -20,7 +20,7 @@ RELATIVE_DEPENDENCY_REPOSITORY_DIR=$(echo "$GIT_URL" | sed "s/^.*\///; s/\.git$/
 DEPENDENCY_REPOSITORY_DIR="$REPOSITORIES_DIR/$RELATIVE_DEPENDENCY_REPOSITORY_DIR"
 
 if [ ! -d "$DEPENDENCY_REPOSITORY_DIR" ]; then
-	echo "Info: dependency not installed"
+	echo "Info: dependency not installed" 1>&2
 else
 	if [ ! -d "$DEPENDENCY_REPOSITORY_DIR/.git" ]; then
 		echo "Error: dependency is not a git repository"
