@@ -17,8 +17,10 @@ print_help () {
 	echo "Usage: ./dependencies.sh ACTION"
 	echo
 	echo "ACTION:"
-	echo "	add: add new dependency to the project"
+	echo "	add: add new dependency to the project. Use './dependencies.sh add --help' for more information"
+	echo "	remove: remove dependency from the project. Use './dependencies.sh remove --help' for more information"
 	echo "	clean: delete all downloaded dependencies (everything inside ./external_dependencies)"
+	echo "	list: list all project's dependencies"
 }
 
 if [ "$1" == "--help" ]; then
@@ -38,6 +40,13 @@ elif [ "$1" == "clean" ]; then
 		echo "Info: Downloaded dependencies deleted"
 	else
 		echo "Info: Operation cancelled"
+	fi
+elif [ "$1" == "list" ]; then
+	DEPENDENCY_LIST=$(awk FNR!=1 "$DEPENDENCY_MANAGER_DIR/install.sh")
+	if [ "$DEPENDENCY_LIST" == "" ]; then
+		echo "Info: project has no external dependencies"
+	else
+		echo "$DEPENDENCY_LIST"
 	fi
 else
 	echo "Error: unknown action"
