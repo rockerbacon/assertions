@@ -20,7 +20,17 @@ print_help () {
 	echo "	add: add new dependency to the project. Use './dependencies.sh add --help' for more information"
 	echo "	remove: remove dependency from the project. Use './dependencies.sh remove --help' for more information"
 	echo "	clean: delete all downloaded dependencies (everything inside ./external_dependencies)"
+	echo "	install: download and configure all dependencies"
 	echo "	list: list all project's dependencies"
+}
+
+determine_dependency_list_is_empty() {
+	DEPENDENCY_LIST=$(awk FNR!=1 "$DEPENDENCY_MANAGER_DIR/install.sh")
+	if [ "$DEPENDENCY_LIST" == "" ]; then
+		DEPENDENCY_LIST_IS_EMPTY=true
+	else
+		DEPENDENCY_LIST_IS_EMPTY=""
+	fi
 }
 
 if [ "$1" == "--help" ]; then
@@ -42,14 +52,22 @@ elif [ "$1" == "clean" ]; then
 		echo "Info: Operation cancelled"
 	fi
 elif [ "$1" == "list" ]; then
-	DEPENDENCY_LIST=$(awk FNR!=1 "$DEPENDENCY_MANAGER_DIR/install.sh")
-	if [ "$DEPENDENCY_LIST" == "" ]; then
+	determine_dependency_list_is_empty
+	if [ $DEPENDENCY_LIST_IS_EMPTY ]; then
 		echo "Info: project has no external dependencies"
 	else
-		echo "$DEPENDENCY_LIST"
+		echo "$DEPENDENCY_LIST" | sed "s/\/install\.sh//g"
+	fi
+elif [ "$1" == "install" ]; then
+	determine_dependency_list_is_empty
+	if [ $DEPENDENCY_LIST_IS_EMPTY ]; then
+		echo "Info: project has no external dependencies"
+	else
+		cd "$DEPENDENCY_MANAGER_DIR/modules"
+		source "$DEPENDENCY_MANAGER_DIR/install.sh"
 	fi
 else
-	echo "Error: unknown action"
+	echo "Error: unknown action '$1'"
 	echo
 	print_help
 	exit 1
