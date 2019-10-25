@@ -35,17 +35,17 @@ done
 
 if [ "$LIBRARY_FILE" == "" ]; then
 	echo "Error: could not find '${FULL_LIBRARY_NAME}'"
+	exit 1
 fi
 
 echo "Info: found file '$LIBRARY_FILE'" 1>&2
 
 if [ -f "$DEPENDENCIES_LIB_DIR/$FULL_LIBRARY_NAME" ]; then
-	echo "Error: library already added to dependencies"
-	exit 1
+	echo "Info: library already linked"
+else
+	echo "Info: linking dependency to '$DEPENDENCIES_LIB_DIR'" 1>&2
+	ln -s "$LIBRARY_FILE" "$DEPENDENCIES_LIB_DIR/$FULL_LIBRARY_NAME"
 fi
-
-echo "Info: linking dependency to '$DEPENDENCIES_LIB_DIR'" 1>&2
-ln -s "$LIBRARY_FILE" "$DEPENDENCIES_LIB_DIR/$FULL_LIBRARY_NAME"
 
 echo "Info: dependency configured: $LIBRARY $LINK_STATICALLY" 1>&2
 
