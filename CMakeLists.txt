@@ -69,3 +69,11 @@ if (${BUILD_SHARED_LIBRARY})
 	add_library(${PROJECT_NAME} SHARED ${all_obj_binaries})
 endif()
 
+if (${BUILD_STATIC_LIBRARY} OR ${BUILD_SHARED_LIBRARY})
+	file (
+		COPY ${objs_src_dir}/
+		DESTINATION release/include
+		FILES_MATCHING PATTERN "*.h"
+	)
+endif()
+
