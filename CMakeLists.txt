@@ -26,7 +26,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 
 endif()
 
-include_directories(${objs_src_dir} ${external_include_dir})
+include_directories(${external_include_dir})
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY release/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY release/lib)
@@ -51,6 +51,7 @@ foreach(test_src_file ${tests_src_files})
 		PROPERTIES
 		RUNTIME_OUTPUT_DIRECTORY "tests"
 	)
+	target_include_directories(${test_binary} ${objs_src_dir})
 	target_link_libraries(${test_binary} ${external_libraries})
 	add_test(NAME ${test_binary} COMMAND ${test_binary})
 endforeach()
@@ -60,6 +61,7 @@ foreach(program_src_file ${programs_src_files})
 	string(REGEX REPLACE "(^(.*/)*${programs_src_dir}/)|(.cpp)" "" program_binary ${program_src_file})
 	string(REGEX REPLACE "/" "_" program_binary ${program_binary})
 	add_executable(${program_binary} ${program_src_file} ${all_obj_binaries})
+	target_include_directories(${program_binary} ${objs_src_dir})
 	target_link_libraries(${program_binary} ${external_libraries})
 endforeach()
 
