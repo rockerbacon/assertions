@@ -1,4 +1,4 @@
-#include <assertions-test/test/assert.h>
+#include <assertions-test/test.h>
 
 begin_tests {
 	test_suite("when constant variables are in the external scope") {
