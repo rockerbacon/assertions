@@ -1,4 +1,4 @@
-#include <assertions-test/test/assert.h>
+#include <assertions-test/test.h>
 
 using namespace std;
 
