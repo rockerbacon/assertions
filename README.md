@@ -8,4 +8,6 @@ All documentation on the ideas behind Assertions are available in [THE WIKI](htt
 
 ## Projects Applying Assertions
 
-Currently, only the C++ Framework in this project makes use of Assertions' ideas.
+* Assertions C++ Project Manager, contained in this repository;
+* [Assertions C++ Test](https://github.com/rockerbacon/assertions-test)
+* [Assertions C++ Template](https://github.com/rockerbacon/assertions-template): Template for quick project setup
