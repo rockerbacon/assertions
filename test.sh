@@ -77,7 +77,7 @@ do
 		BUILD_STATUS="$?"
 		if [ ! "$BUILD_STATUS" -eq 0 ]; then
 			echo "${red_color}Build failed:${reset_color}"
-			TOTAL_FAILED_TESTS_THIS_RUN=$(grep -oe 'test_case( )*\(' "$TEST_SOURCE_PATH" | wc -l)
+			TOTAL_FAILED_TESTS_THIS_RUN=$(grep -oE 'test_case\s*\(' "$CURRENT_TEST" | wc -l)
 			TOTAL_FAILED_TESTS=`expr $TOTAL_FAILED_TESTS_THIS_RUN + $TOTAL_FAILED_TESTS`
 		else
 			TEST_STDERR_OUTPUT=$(./run.sh --full-output "$CURRENT_TEST" 2>&1 1>&3)
