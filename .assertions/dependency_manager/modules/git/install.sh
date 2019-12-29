@@ -54,7 +54,8 @@ if [ "$GIT_COMMIT" == "" ]; then
 	GIT_COMMIT=$LASTEST_TAGGED_COMMIT
 fi
 
-git checkout $GIT_COMMIT
+echo "Info: checking out $GIT_COMMIT" 1>&2
+git checkout -q $GIT_COMMIT
 CHECKOUT_STATUS=$?
 if [ "$CHECKOUT_STATUS" != "0" ]; then
 	echo "Error: not a valid commit: '$GIT_COMMIT'"
@@ -97,8 +98,11 @@ fi
 if [ -f "$DEPENDENCY_REPOSITORY_DIR/dependencies.sh" ]; then
 	echo "Info: recursively installing dependencies" 1>&2
 	"$DEPENDENCY_REPOSITORY_DIR/dependencies.sh" install
-	echo "Info: linking '$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs/*' in '$DEPENDENCIES_OBJ_DIR/'" 1>&2
-	ln -s "$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs/"* "$DEPENDENCIES_OBJ_DIR/"
+	HAS_RECURSIVE_DEPENDENCIES=$(ls -A "$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs")
+	if [ "$HAS_RECURSIVE_DEPENDENCIES" != "" ]; then
+		echo "Info: linking '$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs/*' in '$DEPENDENCIES_OBJ_DIR/'" 1>&2
+		ln -s "$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs/"* "$DEPENDENCIES_OBJ_DIR/"
+	fi
 fi
 
 echo "Info: dependency configured: $GIT_URL $GIT_COMMIT \"$GIT_OBJS_DIR\" \"$GIT_INCLUDE_DIR\""
