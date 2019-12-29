@@ -87,14 +87,17 @@ fi
 DEPENDENCY_INSTALL_DIR="$DEPENDENCIES_OBJ_DIR/$RELATIVE_DEPENDENCY_REPOSITORY_DIR"
 mkdir -p "$DEPENDENCY_INSTALL_DIR"
 
+echo "Info: linking '$DEPENDENCY_REPOSITORY_DIR/$GIT_OBJS_DIR/*' in '$DEPENDENCY_INSTALL_DIR/'" 1>&2
 ln -s "$DEPENDENCY_REPOSITORY_DIR/$GIT_OBJS_DIR/"* "$DEPENDENCY_INSTALL_DIR/"
 if [ "$GIT_OBJS_DIR" != "$GIT_INCLUDE_DIR" ]; then
-	ln -s "$DEPENDENCY_REPOSITORY_DIR/$GIT_INCLUDE_DIR/*" "$DEPENDENCY_INSTALL_DIR/"
+	echo "Info: linking '$DEPENDENCY_REPOSITORY_DIR/$GIT_INCLUDE_DIR/*' in '$DEPENDENCY_INSTALL_DIR/'" 1>&2
+	ln -s "$DEPENDENCY_REPOSITORY_DIR/$GIT_INCLUDE_DIR/"* "$DEPENDENCY_INSTALL_DIR/"
 fi
 
 if [ -f "$DEPENDENCY_REPOSITORY_DIR/dependencies.sh" ]; then
-	echo "Info: recursively installing dependencies"
+	echo "Info: recursively installing dependencies" 1>&2
 	"$DEPENDENCY_REPOSITORY_DIR/dependencies.sh" install
+	echo "Info: linking '$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs/*' in '$DEPENDENCIES_OBJ_DIR/'" 1>&2
 	ln -s "$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs/"* "$DEPENDENCIES_OBJ_DIR/"
 fi
 
