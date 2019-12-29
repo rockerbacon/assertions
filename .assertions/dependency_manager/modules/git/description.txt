@@ -1,1 +1,1 @@
-libraries from git projects which use the Assertions C++ Framework
+source files of git projects which use the Assertions C++ Framework
