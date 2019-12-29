@@ -98,5 +98,5 @@ if [ -f "$DEPENDENCY_REPOSITORY_DIR/dependencies.sh" ]; then
 	ln -s "$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs/"* "$DEPENDENCIES_OBJ_DIR/"
 fi
 
-echo "Info: dependency configured: $GIT_URL $GIT_COMMIT $GIT_OBJS_DIR $GIT_INCLUDE_DIR"
+echo "Info: dependency configured: $GIT_URL $GIT_COMMIT \"$GIT_OBJS_DIR\" \"$GIT_INCLUDE_DIR\""
 
