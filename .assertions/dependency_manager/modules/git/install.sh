@@ -1,11 +1,5 @@
 #!/bin/bash
 
-SCRIPT_DIR=$(dirname $0)
-PROJECT_ROOT=$(realpath "$SCRIPT_DIR/../../../..")
-MODULE_ROOT=$(realpath "$SCRIPT_DIR")
-DEPENDENCIES_DIR="$PROJECT_ROOT/external_dependencies"
-DEPENDENCIES_OBJ_DIR="$DEPENDENCIES_DIR/objs"
-DEPENDENCIES_LOCAL_OBJ_DIR="$DEPENDENCIES_DIR/local_objs"
 REPOSITORIES_DIR="$DEPENDENCIES_DIR/git"
 
 rollback_installation () {
@@ -21,8 +15,8 @@ mkdir -p "$REPOSITORIES_DIR"
 GIT_PATH="$1"
 shift
 if [ "$GIT_PATH" == "" ]; then
-	echo "Error: unspecified git path"
-	exit 1
+	log_error "unspecified git path"
+	return 1
 fi
 FROZEN_ARGS="$GIT_PATH"
 
@@ -82,10 +76,10 @@ done
 ##################### Command Line Interface ##########################
 
 if [ "$IGNORE_LOCAL_DEPENDENCIES" == "true" ] && [ "$LOCAL_ONLY" == "true" ]; then
-	echo "Info: skipping local dependency 'git ${GIT_PATH}'" 1>&2
-	exit 0
+	log_info "skipping local dependency 'git ${GIT_PATH}'"
+	return 0
 else
-	echo "Info: installing dependency 'git ${GIT_PATH}'" 1>&2
+	log_info "installing dependency 'git ${GIT_PATH}'"
 fi
 
 if [ "$DEPENDENCY_NAME" == "" ]; then
@@ -105,54 +99,54 @@ fi
 REPOSITORY_URL="$DOWNLOAD_PROTOCOL://$GIT_SERVER_DOMAIN/$GIT_PATH.git"
 
 if [ -d "$DEPENDENCY_REPOSITORY_DIR" ]; then
-	echo "Info: Dependency '$DEPENDENCY_REPOSITORY_DIR' already cloned" 1>&2
+	log_info "dependency '$DEPENDENCY_REPOSITORY_DIR' already cloned"
 else
 	git clone "$REPOSITORY_URL" "$DEPENDENCY_REPOSITORY_DIR"; CLONE_STATUS=$?
 	if [ $CLONE_STATUS -ne 0 ]; then
-		exit 1
+		return 1
 	fi
 fi
 cd "$DEPENDENCY_REPOSITORY_DIR"
 
 if [ "$GIT_COMMIT" == "" ]; then
 	GIT_COMMIT=$(git tag --sort refname | tail -n 1)
-	echo "Info: commit not specified, using latest tagged commit ($GIT_COMMIT)" 1>&2
+	log_info "commit not specified, using latest tagged commit ($GIT_COMMIT)"
 fi
 FROZEN_ARGS="$FROZEN_ARGS --version $GIT_COMMIT"
 
-echo "Info: checking out $GIT_COMMIT" 1>&2
+log_info "checking out $GIT_COMMIT"
 git checkout -q $GIT_COMMIT; CHECKOUT_STATUS=$?
 if [ $CHECKOUT_STATUS -ne 0 ]; then
-	echo "Error: not a valid commit: '$GIT_COMMIT'"
+	log_error "not a valid commit: '$GIT_COMMIT'"
 	rollback_installation
-	exit 1
+	return 1
 fi
 
 if [ "$BEFORE_LINKING_SCRIPT" != "" ]; then
-	echo "Info: executing script '$BEFORE_LINKING_SCRIPT'" 1>&2
+	log_info "executing script '$BEFORE_LINKING_SCRIPT'"
 	$BEFORE_LINKING_SCRIPT
 fi
 
 if [ "$GIT_OBJS_DIR" == "" ]; then
 	GIT_OBJS_DIR="src/objs"
-	echo "Info: --objs-dir not specified, using '$GIT_OBJS_DIR'" 1>&2
+	log_info "--objs-dir not specified, using '$GIT_OBJS_DIR'"
 fi
 
 if [ "$GIT_INCLUDE_DIR" == "" ]; then
 	GIT_INCLUDE_DIR="src/objs"
-	echo "Info: --include-dir not specified, using '$GIT_INCLUDE_DIR'" 1>&2
+	log_info "--include-dir not specified, using '$GIT_INCLUDE_DIR'"
 fi
 
 if [ ! -d "$DEPENDENCY_REPOSITORY_DIR/$GIT_OBJS_DIR" ]; then
-		echo "Error: no directory '$GIT_OBJS_DIR' in project's root"
+		log_error "no directory '$GIT_OBJS_DIR' in project's root"
 		rollback_installation
-		exit 1
+		return 1
 fi
 
 if [ ! -d "$DEPENDENCY_REPOSITORY_DIR/$GIT_INCLUDE_DIR" ]; then
-		echo "Error: no directory '$GIT_INCLUDE_DIR' in project's root"
+		log_error "no directory '$GIT_INCLUDE_DIR' in project's root"
 		rollback_installation
-		exit 1
+		return 1
 fi
 
 if [ "$LOCAL_ONLY" == "" ]; then
@@ -166,22 +160,22 @@ else
 fi
 mkdir -p "$DEPENDENCY_INSTALL_DIR"
 
-echo "Info: linking '$DEPENDENCY_REPOSITORY_DIR/$GIT_OBJS_DIR/*' in '$DEPENDENCY_INSTALL_DIR/'" 1>&2
+log_info "linking '$DEPENDENCY_REPOSITORY_DIR/$GIT_OBJS_DIR/*' in '$DEPENDENCY_INSTALL_DIR/'"
 ln -s "$DEPENDENCY_REPOSITORY_DIR/$GIT_OBJS_DIR/"* "$DEPENDENCY_INSTALL_DIR/"
 if [ "$GIT_OBJS_DIR" != "$GIT_INCLUDE_DIR" ]; then
-	echo "Info: linking '$DEPENDENCY_REPOSITORY_DIR/$GIT_INCLUDE_DIR/*' in '$DEPENDENCY_INSTALL_DIR/'" 1>&2
+	log_info "linking '$DEPENDENCY_REPOSITORY_DIR/$GIT_INCLUDE_DIR/*' in '$DEPENDENCY_INSTALL_DIR/'"
 	ln -s "$DEPENDENCY_REPOSITORY_DIR/$GIT_INCLUDE_DIR/"* "$DEPENDENCY_INSTALL_DIR/"
 fi
 
 if [ -f "$DEPENDENCY_REPOSITORY_DIR/dependencies.sh" ]; then
-	echo "Info: recursively installing dependencies" 1>&2
+	log_info "recursively installing dependencies"
 	"$DEPENDENCY_REPOSITORY_DIR/dependencies.sh" install --ignore-local-dependencies
 	HAS_RECURSIVE_DEPENDENCIES=$(ls -A "$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs")
 	if [ "$HAS_RECURSIVE_DEPENDENCIES" != "" ]; then
-		echo "Info: linking '$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs/*' in '$DEPENDENCIES_OBJ_DIR/'" 1>&2
+		log_info "linking '$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs/*' in '$DEPENDENCIES_OBJ_DIR/'"
 		ln -s "$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs/"* "$DEPENDENCIES_OBJ_DIR/"
 	fi
 fi
 
-echo "Info: dependency configured: $FROZEN_ARGS"
+freeze_args "$FROZEN_ARGS"
 
