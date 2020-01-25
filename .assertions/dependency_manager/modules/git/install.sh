@@ -19,15 +19,49 @@ mkdir -p "$REPOSITORIES_DIR"
 
 ##################### Command Line Interface ##########################
 GIT_URL="$1"
+shift
 if [ "$GIT_URL" == "" ]; then
 	echo "Error: unspecified git URL"
 	exit 1
 fi
-GIT_COMMIT="$2"
-LOCAL_ONLY="$3"
-GIT_OBJS_DIR="$4"
-GIT_INCLUDE_DIR="$5"
-POST_DOWNLOAD_SCRIPT="$6"
+FROZEN_ARGS="$GIT_URL"
+
+until [ -z "$1" ]; do
+
+	case "$1" in
+
+		--version)
+			GIT_COMMIT="$2"
+			shift
+		;;
+
+		--local-only)
+			LOCAL_ONLY=true
+			FROZEN_ARGS="$FROZEN_ARGS --local-only"
+		;;
+
+		--objs-dir)
+			GIT_OBJS_DIR="$2"
+			FROZEN_ARGS="$FROZEN_ARGS --objs-dir '$GIT_OBJS_DIR'"
+			shift
+		;;
+
+		--include-dir)
+			GIT_INCLUDE_DIR="$2"
+			FROZEN_ARGS="$FROZEN_ARGS --include-dir '$GIT_INCLUDE_DIR'"
+			shift
+		;;
+
+		--before-linking)
+			POST_DOWNLOAD_SCRIPT="$2"
+			FROZEN_ARGS="$FROZEN_ARGS --before-linking '$POST_DOWNLOAD_SCRIPT'"
+			shift
+		;;
+
+	esac
+
+	shift
+done
 ##################### Command Line Interface ##########################
 
 if [ "$IGNORE_LOCAL_DEPENDENCIES" == "true" ] && [ "$LOCAL_ONLY" == "true" ]; then
@@ -63,6 +97,7 @@ if [ "$GIT_COMMIT" == "" ]; then
 	echo "Info: commit not specified, using latest tagged commit ($LASTEST_TAGGED_COMMIT)" 1>&2
 	GIT_COMMIT=$LASTEST_TAGGED_COMMIT
 fi
+FROZEN_ARGS="$FROZEN_ARGS --version $GIT_COMMIT"
 
 echo "Info: checking out $GIT_COMMIT" 1>&2
 git checkout -q $GIT_COMMIT
@@ -128,5 +163,5 @@ if [ -f "$DEPENDENCY_REPOSITORY_DIR/dependencies.sh" ]; then
 	fi
 fi
 
-echo "Info: dependency configured: $GIT_URL $GIT_COMMIT $LOCAL_ONLY \"$GIT_OBJS_DIR\" \"$GIT_INCLUDE_DIR\" \"$POST_DOWNLOAD_SCRIPT\""
+echo "Info: dependency configured: $FROZEN_ARGS"
 
