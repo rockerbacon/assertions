@@ -154,9 +154,9 @@ if [ "$LOCAL_ONLY" == "" ]; then
 fi
 
 if [ "$LOCAL_ONLY" == "false" ]; then
-	DEPENDENCY_INSTALL_DIR="$DEPENDENCIES_OBJ_DIR/$DEPENDENCY_NAME"
+	DEPENDENCY_INSTALL_DIR="$DEPENDENCIES_OBJS_DIR/$DEPENDENCY_NAME"
 else
-	DEPENDENCY_INSTALL_DIR="$DEPENDENCIES_LOCAL_OBJ_DIR/$DEPENDENCY_NAME"
+	DEPENDENCY_INSTALL_DIR="$DEPENDENCIES_LOCAL_OBJS_DIR/$DEPENDENCY_NAME"
 fi
 mkdir -p "$DEPENDENCY_INSTALL_DIR"
 
@@ -172,8 +172,8 @@ if [ -f "$DEPENDENCY_REPOSITORY_DIR/dependencies.sh" ]; then
 	"$DEPENDENCY_REPOSITORY_DIR/dependencies.sh" install --ignore-local-dependencies
 	HAS_RECURSIVE_DEPENDENCIES=$(ls -A "$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs")
 	if [ "$HAS_RECURSIVE_DEPENDENCIES" != "" ]; then
-		log_info "linking '$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs/*' in '$DEPENDENCIES_OBJ_DIR/'"
-		ln -s "$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs/"* "$DEPENDENCIES_OBJ_DIR/"
+		log_info "linking '$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs/*' in '$DEPENDENCIES_OBJS_DIR/'"
+		ln -s "$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs/"* "$DEPENDENCIES_OBJS_DIR/"
 	fi
 fi
 

@@ -75,7 +75,7 @@ elif [ "$1" == "list" ]; then
 	if [ $DEPENDENCY_LIST_IS_EMPTY ]; then
 		echo "Info: project has no external dependencies"
 	else
-		echo "$DEPENDENCY_LIST" | sed "s/\/install\.sh//g"
+		echo "$DEPENDENCY_LIST" | sed "s/\/install\.sh//g; s/^source\s\+//g"
 	fi
 elif [ "$1" == "install" ]; then
 	determine_dependency_list_is_empty

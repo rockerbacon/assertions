@@ -78,5 +78,5 @@ if [ -f "$DEPENDENCY_MANAGER_DIR/install.sh" ]; then
 fi
 
 echo "Info: local installation successful, listing dependency on '$DEPENDENCY_MANAGER_DIR/install.sh'"
-echo "$DEPENDENCY_UNIVERSAL_INSTALL_COMMAND" >> "$DEPENDENCY_MANAGER_DIR/install.sh"
+echo "source $DEPENDENCY_UNIVERSAL_INSTALL_COMMAND" >> "$DEPENDENCY_MANAGER_DIR/install.sh"
 
