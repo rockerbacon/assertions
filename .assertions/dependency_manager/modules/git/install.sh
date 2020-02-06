@@ -2,10 +2,22 @@
 
 REPOSITORIES_DIR="$DEPENDENCIES_DIR/git"
 
+INITIAL_WORKDIR=$PWD
+FROZEN_ARGS=""
+GIT_COMMIT=""
+LOCAL_ONLY=""
+GIT_OBJS_DIR=""
+GIT_INCLUDE_DIR=""
+BEFORE_LINKING_SCRIPT=""
+DEPENDENCY_NAME=""
+GIT_SERVER_DOMAIN=""
+DOWNLOAD_PROTOCOL=""
+
 rollback_installation () {
 	if [ -d "$DEPENDENCY_REPOSITORY_DIR/.git" ]; then
 		echo "Rolling back: deleting '$DEPENDENCY_REPOSITORY_DIR'"
 		rm -rf "$DEPENDENCY_REPOSITORY_DIR"
+		cd "$INITIAL_WORKDIR"
 	fi
 }
 
@@ -106,6 +118,8 @@ else
 		return 1
 	fi
 fi
+
+log_info "changing directory to '$DEPENDENCY_REPOSITORY_DIR'"
 cd "$DEPENDENCY_REPOSITORY_DIR"
 
 if [ "$GIT_COMMIT" == "" ]; then
@@ -178,4 +192,5 @@ if [ -f "$DEPENDENCY_REPOSITORY_DIR/dependencies.sh" ]; then
 fi
 
 freeze_args "$FROZEN_ARGS"
+cd "$INITIAL_WORKDIR"
 
