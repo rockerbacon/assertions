@@ -13,5 +13,5 @@ cp	-r	.assertions		"$environment_dir/"
 cp	-R	tests			"$environment_dir/"
 cp		CMakeLists.txt	"$environment_dir/"
 
-cd "$environment_dir"
+echo "$environment_dir"
 
