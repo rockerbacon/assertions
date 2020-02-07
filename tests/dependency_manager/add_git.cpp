@@ -72,6 +72,33 @@ tests {
 
 			assert(repository_cloned, ==, "true");
 		};
+
+		test_case("should link source code from the cloned repository to external_dependencies/objs") {
+			bash::shell shell;
+			const string& environment_dir = *test_environment;
+			shell.setvar("environment_dir", environment_dir);
+			shell.exec(R"(
+				cd "$environment_dir"
+				files_in_cloned_repo=$(ls external_dependencies/git/cpp-benchmark/src/objs)
+				expected_links_count=0
+				actual_links_count=0
+				for source_file in $files_in_cloned_repo; do
+					link="external_dependencies/objs/cpp-benchmark/$source_file"
+					if [ -L "$link" ]; then
+						file_is_linked=$(readlink -f "$link" | grep -o "$source_file")
+						if [ "$file_is_linked" != "" ]; then
+							actual_links_count=`expr $actual_links_count + 1`
+						fi
+					fi
+					expected_links_count=`expr $expected_links_count + 1`
+				done
+			)");
+
+			auto expected_links_count = shell.getvar("expected_links_count").get();
+			auto actual_links_count = shell.getvar("actual_links_count").get();
+
+			assert(actual_links_count, ==, expected_links_count);
+		};
 	}
 }
 
