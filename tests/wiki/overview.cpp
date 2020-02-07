@@ -17,7 +17,7 @@ class Developer {
 		}
 };
 
-begin_tests {
+tests {
 	test_suite("developers are polite") {
 		test_case("they greet you in the morning") {
 			Developer dev;
@@ -45,5 +45,5 @@ begin_tests {
 			assert(rest_api, ==, "broken software");
 		};
 	}
-} end_tests;
+}
 

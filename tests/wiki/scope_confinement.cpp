@@ -1,6 +1,6 @@
 #include <assertions-test/test.h>
 
-begin_tests {
+tests {
 	test_suite("when constant variables are in the external scope") {
 		const int constant_variable = 0;
 
@@ -10,11 +10,12 @@ begin_tests {
 	}
 
 	test_suite("when mutable variables are in the external scope") {
-		//int mutable_variable = 1;
+		int mutable_variable = 1;
 
-		test_case("a test case which access them will break the build") {
-			//assert(mutable_variable, ==, 1);	// won't even build, so I commented it out
+		test_case("a test case which attempts to modify them breaks the build") {
+			//mutable_variable = 2;	// won't even build, so I commented it out
+			assert(mutable_variable, ==, 1);
 		};
 	}
-} end_tests;
+}
 
