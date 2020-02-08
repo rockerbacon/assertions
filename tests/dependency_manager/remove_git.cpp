@@ -11,7 +11,7 @@ tests {
 			shell.exec(R"(
 				environment_dir=$(tests/setup_environment.sh)
 				cd "$environment_dir"
-				./dependencies.sh add git rockerbacon/cpp-benchmark
+				./dependencies.sh add git rockerbacon/cpp-benchmark --local-only
 				yes | ./dependencies.sh remove git rockerbacon/cpp-benchmark
 			)");
 
@@ -42,6 +42,24 @@ tests {
 
 			assert(dependency_was_removed, ==, "true");
 		};
+
+		test_case("local dependency should be unlisted") {
+			bash::shell shell;
+
+			shell.setvar("environment_dir", (string)*test_environment);
+			shell.exec(R"(
+				cd "$environment_dir"
+				dependency_in_list=$(grep cpp-benchmark .assertions/dependency_manager/install.sh)
+				if [ "$dependency_in_list" == "" ]; then
+					dependency_was_unlisted=true
+				else
+					dependency_was_unlisted=false
+				fi
+			)");
+			auto dependency_was_unlisted = shell.getvar("dependency_was_unlisted").get();
+
+			assert(dependency_was_unlisted, ==, "true");
+		};
 	}
 
 	test_suite("when removing dependencies") {
@@ -55,9 +73,6 @@ tests {
 				yes | ./dependencies.sh remove git rockerbacon/cpp-benchmark
 			)").wait();
 
-			cerr << shell.get_stdout().rdbuf() << endl;
-			cerr << shell.get_stderr().rdbuf() << endl;
-
 			return shell.getvar("environment_dir").get();
 		};
 
@@ -68,7 +83,7 @@ tests {
 			shell.exec(R"(rm -rf "$environment_dir")").wait();
 		};
 
-		test_case("local dependency should be removed from external_dependencies/objs") {
+		test_case("dependency should be removed from external_dependencies/objs") {
 			bash::shell shell;
 
 			shell.setvar("environment_dir", (string)*test_environment);
@@ -83,8 +98,25 @@ tests {
 			)");
 			auto dependency_was_removed = shell.getvar("dependency_was_removed").get();
 
-
 			assert(dependency_was_removed, ==, "true");
+		};
+
+		test_case("dependency should be unlisted") {
+			bash::shell shell;
+
+			shell.setvar("environment_dir", (string)*test_environment);
+			shell.exec(R"(
+				cd "$environment_dir"
+				dependency_in_list=$(grep cpp-benchmark .assertions/dependency_manager/install.sh)
+				if [ "$dependency_in_list" == "" ]; then
+					dependency_was_unlisted=true
+				else
+					dependency_was_unlisted=false
+				fi
+			)");
+			auto dependency_was_unlisted = shell.getvar("dependency_was_unlisted").get();
+
+			assert(dependency_was_unlisted, ==, "true");
 		};
 	}
 }
