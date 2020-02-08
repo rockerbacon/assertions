@@ -2,10 +2,22 @@
 
 REPOSITORIES_DIR="$DEPENDENCIES_DIR/git"
 
+INITIAL_WORKDIR=$PWD
+FROZEN_ARGS=""
+GIT_COMMIT=""
+LOCAL_ONLY=""
+GIT_OBJS_DIR=""
+GIT_INCLUDE_DIR=""
+BEFORE_LINKING_SCRIPT=""
+DEPENDENCY_NAME=""
+GIT_SERVER_DOMAIN=""
+DOWNLOAD_PROTOCOL=""
+
 rollback_installation () {
 	if [ -d "$DEPENDENCY_REPOSITORY_DIR/.git" ]; then
 		echo "Rolling back: deleting '$DEPENDENCY_REPOSITORY_DIR'"
 		rm -rf "$DEPENDENCY_REPOSITORY_DIR"
+		cd "$INITIAL_WORKDIR"
 	fi
 }
 
@@ -106,6 +118,8 @@ else
 		return 1
 	fi
 fi
+
+log_info "changing directory to '$DEPENDENCY_REPOSITORY_DIR'"
 cd "$DEPENDENCY_REPOSITORY_DIR"
 
 if [ "$GIT_COMMIT" == "" ]; then
@@ -154,9 +168,9 @@ if [ "$LOCAL_ONLY" == "" ]; then
 fi
 
 if [ "$LOCAL_ONLY" == "false" ]; then
-	DEPENDENCY_INSTALL_DIR="$DEPENDENCIES_OBJ_DIR/$DEPENDENCY_NAME"
+	DEPENDENCY_INSTALL_DIR="$DEPENDENCIES_OBJS_DIR/$DEPENDENCY_NAME"
 else
-	DEPENDENCY_INSTALL_DIR="$DEPENDENCIES_LOCAL_OBJ_DIR/$DEPENDENCY_NAME"
+	DEPENDENCY_INSTALL_DIR="$DEPENDENCIES_LOCAL_OBJS_DIR/$DEPENDENCY_NAME"
 fi
 mkdir -p "$DEPENDENCY_INSTALL_DIR"
 
@@ -172,10 +186,11 @@ if [ -f "$DEPENDENCY_REPOSITORY_DIR/dependencies.sh" ]; then
 	"$DEPENDENCY_REPOSITORY_DIR/dependencies.sh" install --ignore-local-dependencies
 	HAS_RECURSIVE_DEPENDENCIES=$(ls -A "$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs")
 	if [ "$HAS_RECURSIVE_DEPENDENCIES" != "" ]; then
-		log_info "linking '$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs/*' in '$DEPENDENCIES_OBJ_DIR/'"
-		ln -s "$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs/"* "$DEPENDENCIES_OBJ_DIR/"
+		log_info "linking '$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs/*' in '$DEPENDENCIES_OBJS_DIR/'"
+		ln -s "$DEPENDENCY_REPOSITORY_DIR/external_dependencies/objs/"* "$DEPENDENCIES_OBJS_DIR/"
 	fi
 fi
 
 freeze_args "$FROZEN_ARGS"
+cd "$INITIAL_WORKDIR"
 
