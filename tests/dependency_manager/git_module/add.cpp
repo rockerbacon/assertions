@@ -163,5 +163,42 @@ tests {
 			assert(actual_links_count, ==, expected_links_count);
 		};
 	}
+
+	test_suite("when adding dependencies with local-only dependencies") {
+		setup(string, test_environment) {
+			bash::shell shell;
+			shell.exec(R"(
+				environment_dir=$(./tests/setup_environment.sh)
+				cd "$environment_dir"
+				rm .assertions/dependency_manager/install.sh
+				echo "#!/bin/bash" > .assertions/dependency_manager/install.sh
+				./dependencies.sh add git rockerbacon/cpp-benchmark --local-only
+			)");
+			return shell.getvar("environment_dir").get();
+		};
+
+		teardown(environment_dir) {
+			bash::shell shell;
+			shell.setvar("environment_dir", environment_dir);
+			shell.exec(R"(rm -rf "$environment_dir")");
+		};
+
+		test_case("should not clone local-only dependency") {
+			bash::shell shell;
+			shell.setvar("environment_dir", (string)*test_environment);
+			shell.exec(R"(
+				cd "$environment_dir"
+				if [ -d "external_dependencies/git/assertions-test" ]; then
+					cloned_dependency=true
+				else
+					cloned_dependency=false
+				fi
+			)");
+
+			auto cloned_dependency = shell.getvar("cloned_dependency").get();
+			assert(cloned_dependency, ==, "false");
+		};
+
+	}
 }
 
