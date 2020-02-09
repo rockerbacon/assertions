@@ -18,7 +18,7 @@ tests {
 		teardown(environment_dir) {
 			bash::shell shell;
 			shell.setvar("environment_dir", environment_dir);
-			shell.exec("rm -rf '$environment_dir'").wait();
+			shell.exec(R"(rm -rf "$environment_dir")").wait();
 		};
 
 		test_case("should create an external dependencies directory") {
@@ -84,6 +84,69 @@ tests {
 				actual_links_count=0
 				for source_file in $files_in_cloned_repo; do
 					link="external_dependencies/objs/cpp-benchmark/$source_file"
+					if [ -L "$link" ]; then
+						file_is_linked=$(readlink -f "$link" | grep -o "$source_file")
+						if [ "$file_is_linked" != "" ]; then
+							actual_links_count=`expr $actual_links_count + 1`
+						fi
+					fi
+					expected_links_count=`expr $expected_links_count + 1`
+				done
+			)");
+
+			auto expected_links_count = shell.getvar("expected_links_count").get();
+			auto actual_links_count = shell.getvar("actual_links_count").get();
+
+			assert(actual_links_count, ==, expected_links_count);
+		};
+	}
+
+	test_suite("when adding a local-only dependency") {
+		setup(string, test_environment) {
+			bash::shell shell;
+			shell.exec(R"(
+				environment_dir=$(./tests/setup_environment.sh)
+				cd "$environment_dir"
+				./dependencies.sh add git rockerbacon/cpp-benchmark --local-only
+			)");
+			return shell.getvar("environment_dir").get();
+		};
+
+		teardown(environment_dir) {
+			bash::shell shell;
+			shell.setvar("environment_dir", environment_dir);
+			shell.exec(R"(rm -rf "$environment_dir")");
+		};
+
+		test_case("should clone the git repository") {
+			bash::shell shell;
+			const string& environment_dir = *test_environment;
+			shell.setvar("environment_dir", environment_dir);
+			shell.exec(R"(
+				cd "$environment_dir"
+				if [ -d external_dependencies/git/cpp-benchmark/.git ]; then
+					repository_cloned=true
+				else
+					repository_cloned=false
+				fi
+			)");
+
+			auto repository_cloned = shell.getvar("repository_cloned").get();
+
+			assert(repository_cloned, ==, "true");
+		};
+
+		test_case("should link source code from the cloned repository to external_dependencies/local_objs") {
+			bash::shell shell;
+			const string& environment_dir = *test_environment;
+			shell.setvar("environment_dir", environment_dir);
+			shell.exec(R"(
+				cd "$environment_dir"
+				files_in_cloned_repo=$(ls external_dependencies/git/cpp-benchmark/src/objs)
+				expected_links_count=0
+				actual_links_count=0
+				for source_file in $files_in_cloned_repo; do
+					link="external_dependencies/local_objs/cpp-benchmark/$source_file"
 					if [ -L "$link" ]; then
 						file_is_linked=$(readlink -f "$link" | grep -o "$source_file")
 						if [ "$file_is_linked" != "" ]; then
