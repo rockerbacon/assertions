@@ -1,6 +1,6 @@
 local fs = require("lfs")
 
-function new_child(parent_node, path)
+function new_node(path, parent_node)
 	local attrs = fs.attributes(path)
 
 	local iter, dir
@@ -29,11 +29,11 @@ function next_child(node)
 
 	local path = node.path.."/"..relative_path
 
-	return new_child(node, path)
+	return new_node(path, node)
 end
 
 fs.bottomup_tree = function(path)
-	local node = new_child(nil, path)
+	local node = new_node(path)
 	return function()
 		if not node then return nil end
 
